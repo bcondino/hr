@@ -1,0 +1,7 @@
+﻿
+*** PLEASE NOTE:  The offical repository for ADempiere downloads has moved!! ***
+
+For downloading the installation files, please visit https://bintray.com/adempiere/Official-Repository/Release
+
+On-line installers are available for v380LTS for Windows x32 and x64 from http://www.adempiere.com/Windows_Installer or in the files section of this project.
+

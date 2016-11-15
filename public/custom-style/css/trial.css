@@ -1,0 +1,111 @@
+	.form-control-custom {
+		display: block;
+		width: 100%;
+		/* height: 25px; */
+		padding: 6px 5px;
+		line-height: 1.42857;
+		color: #555;
+		background-color: #FFF;
+		background-image: none;
+		border: 1px solid #CCC;
+		border-radius: 4px;
+	}
+	
+	.custom-pad-5a {
+		padding: 3px 0;
+	}
+	
+	.required-c {
+		color: red;
+	}
+	
+
+.navbar-fixed-left {
+  width: 140px;
+  position: fixed;
+  border-radius: 0;
+  height: 100%;
+}
+
+.navbar-fixed-left .navbar-nav > li {
+  float: none;  /* Cancel default li float: left */
+  width: 139px;
+}
+
+.navbar-fixed-left + .container {
+  padding-left: 160px;
+}
+
+/* On using dropdown menu (To right shift popuped) */
+.navbar-fixed-left .navbar-nav > li > .dropdown-menu {
+  margin-top: -50px;
+  margin-left: 140px;
+}
+
+.resp-tab-item.trial-active{
+	position: relative;
+    z-index: 1;
+    margin-right: -1px !important;
+    padding: 14px 15px 15px 14px !important;
+    border-top: 1px solid;
+    border: 1px solid #CCCCCC !important;
+    border-left: 4px solid #145597 !important;
+    margin-bottom: 4px !important;
+    border-right: 1px #FFF solid !important;
+    background-color: #fff!important;
+}
+
+.text-red {
+  color: #dd4b39 !important;
+}
+.text-yellow {
+  color: #f39c12 !important;
+}
+.text-aqua {
+  color: #00c0ef !important;
+}
+.text-blue {
+  color: #0073b7 !important;
+}
+.text-black {
+  color: #111111 !important;
+}
+.text-light-blue {
+  color: #3c8dbc !important;
+}
+.text-green {
+  color: green !important;
+}
+.text-gray {
+  color: #d2d6de !important;
+}
+.text-navy {
+  color: #001f3f !important;
+}
+.text-teal {
+  color: #39cccc !important;
+}
+.text-olive {
+  color: #3d9970 !important;
+}
+.text-lime {
+  color: #01ff70 !important;
+}
+.text-orange {
+  color: #ff851b !important;
+}
+.text-fuchsia {
+  color: #f012be !important;
+}
+.text-purple {
+  color: #605ca8 !important;
+}
+.text-maroon {
+  color: #d81b60 !important;
+}
+/*
+.navbar-wiz-panel{
+	background-color: #f9f9f9;
+    border-color: #e7e7e7;
+}
+*/
