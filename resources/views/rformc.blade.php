@@ -110,8 +110,6 @@ letter-spacing:4px;
 		top:398px;
 	}
 	
-
-
 	.fld20 {
 		top:385px;
 	
@@ -217,7 +215,6 @@ letter-spacing:4px;
 		left:560px;
 	}
 
-
 .26a {
 	top:790px;
 	font-size:12px;
@@ -249,9 +246,6 @@ letter-spacing:4px;
 	.fld44 {
 		left:450px;
 	}
-
-
-
 
 	.fld45, .fld46, .fld47, .fld48 {
 	
@@ -291,7 +285,7 @@ letter-spacing:4px;
 		top:800px;
 		left:80px;
 	}
-	.div2 {
+	.sheets {
 		position:relative;
 		top:1500px;
 		visibility:hidden;
@@ -301,32 +295,25 @@ letter-spacing:4px;
 </head>
 <body> 
 	<div class ="container">
-		<span class = "section1 fld1">					{{sprintf("%02d",$fld1)}} </span>
-		<span class = "section1 fld1a">	   				{{$fld1a}} </span> 	
-		<span class = "section1 fld3"> 					{{sprintf("%02d",$fld3)}} </span>
-
-		<span class = "section2 fld5"> 					{{substr($fld5,0,3)}} </span>
-		<span class = "section2 fld5a"> 				{{substr($fld5,4,3)}} </span>
-		<span class = "section2 fld5b"> 				{{substr($fld5,8,3)}} </span>
-		<span class = "section2 fld5c"> 				{{substr($fld5,12,5)}} </span>
-		<span class = "section2 fld6"> 					{{$fld6}} </span>
-
+		<span class = "section1 fld1"> {{sprintf("%02d",$fld1)}} </span>
+		<span class = "section1 fld1a"> {{$fld1a}} </span> 	
+		<span class = "section1 fld3"> {{sprintf("%02d",$fld3)}} </span>
+		<span class = "section2 fld5"> {{substr($fld5,0,3)}} </span>
+		<span class = "section2 fld5a"> {{substr($fld5,4,3)}} </span>
+		<span class = "section2 fld5b"> {{substr($fld5,8,3)}} </span>
+		<span class = "section2 fld5c"> {{substr($fld5,12,5)}} </span>
+		<span class = "section2 fld6"> {{$fld6}} </span>
 		<span class = "section3 fld8"> {{strtoupper($fld8)}} </span>
 		<span class = "section3 fld9"> {{$fld9}} </span>
-
 		<span class = "section4 fld10"> {{strtoupper($fld10)}} </span>
 		<span class = "section4 fld11"> {{$fld11}} </span>
-
 		<span class = "fld12"> {{$fld12}} </span>  
-	
 		<span class = "section1521B fld15"> {{$fld15}} </span>
 		<span class = "section1521B fld16"> {{$fld16}} </span>
 		<span class = "section1521B fld17"> {{$fld17}} </span>
 		<span class = "section1521B fld18"> {{$fld18}} </span>
 		<span class = "section1521B fld19"> {{$fld19}} </span>
 		<span class = "section1521B fld19a"> {{$fld19a}} </span>
-
-
 		<span class = "fld20"> {{$fld20}} </span>
 		<span class = "fld21"> {{$fld21}} </span>
 		<span class = "fld22"> {{$fld22}} </span>
@@ -365,5 +352,5 @@ letter-spacing:4px;
 		<span class = "fld52"> {{$fld52}} </span>
 		<span class = "fld53"> {{$fld53}} </span>
 </div>
-	<p class = "div2"> {{$div2}} </p>
+	<p class = "sheets"> {{$sheets}} </p>
 </html>

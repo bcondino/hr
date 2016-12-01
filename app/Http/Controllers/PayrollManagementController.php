@@ -110,7 +110,7 @@ class PayrollManagementController extends Controller {
 	}
 
 	public function getProfile() {
-		$profiles = tbl_payroll_profile_model::where('company_id', $this->currentCompany->company_id)->get();
+		$profiles = tbl_payroll_profile_model::where('company_id', $this->currentCompany->company_id)->where('active_flag', 'Y')->get();
 		return view('main.payrollmanagement.profile', ['profiles' => $profiles, 'company' => $this->currentCompany]);
 	}
 
@@ -448,14 +448,44 @@ class PayrollManagementController extends Controller {
 				'year' => 'required'
 				, 'payroll_period_id' => 'required'
 				, 'payroll_group_id' => 'required'
-				, 'date_payroll' => 'required',
+				, 'date_payroll' => 'required'
+				, 'pay_temp_param' => 'numeric|size:1'
+				, 'duplicate_entry' => 'numeric|size:0'
+				, 'profile_count' => 'numeric|size:1'
 			];
 			$post_pay_proc_msg = [
 				'year.required' => 'Year is a required field.'
 				, 'payroll_period_id.required' => 'Payroll period is a required field.'
 				, 'payroll_group_id.required' => 'Payroll group is a required field.'
-				, 'date_payroll.required' => 'Payroll credit is a required field.',
+				, 'date_payroll.required' => 'Payroll credit is a required field.'
+				, 'pay_temp_param.size' => 'Payroll template parameter is not yet set for this company.'
+				, 'duplicate_entry.size' => 'An existing entry with same payroll period and group is already present.'
+				, 'profile_count.size' => 'Payroll profile is not yet set for the selected group.'
 			];
+
+			// Validate if payroll template parameter for the selected company is set.
+			$request['pay_temp_param'] = db::table('hr.tbl_payroll_parameter')->where('company_id', $this->currentCompany->company_id)->count();
+
+			// Validate that there is no other entry with same payroll period and group is present and not status = 'Failed'
+			$request['duplicate_entry'] = db::table('hr.tbl_payroll_process')
+											->join('hr.tbl_payroll_period', function ($join) {
+												$join->on('hr.tbl_payroll_process.company_id', '=', 'hr.tbl_payroll_period.company_id')
+													 ->on('hr.tbl_payroll_process.date_from', '=', 'hr.tbl_payroll_period.date_from')
+													 ->on('hr.tbl_payroll_process.date_to', '=', 'hr.tbl_payroll_period.date_to');
+											})
+											->where('hr.tbl_payroll_process.status','!=','Failed')
+											->where('hr.tbl_payroll_period.payroll_period_id', $request->payroll_period_id)
+											->where('hr.tbl_payroll_process.payroll_group_id', $request->payroll_group_id)
+											->where('hr.tbl_payroll_process.company_id', $this->currentCompany->company_id)
+											->count();
+
+			// Validate that payroll profile was setup for the selected payroll group
+			$request['profile_count'] = db::table('hr.tbl_payroll_group')
+											->join('hr.tbl_payroll_profile', 'hr.tbl_payroll_group.payroll_group_id', '=', 'hr.tbl_payroll_profile.payroll_group_id')
+											->where('hr.tbl_payroll_group.payroll_group_id', $request->payroll_group_id)
+											->where('hr.tbl_payroll_group.company_id', $this->currentCompany->company_id)
+											->where('hr.tbl_payroll_profile.active_flag', 'Y')
+											->count();
 
 			$validator = Validator::make($request->all(), $post_pay_proc_rules, $post_pay_proc_msg);
 			if ($validator->fails()) {
@@ -531,7 +561,8 @@ class PayrollManagementController extends Controller {
 						->onQueue('processing');
 				
 				$this->dispatch($job);
-				
+
+						
 				/* 20161012 end of update */
 				
 			}
@@ -776,30 +807,4 @@ class PayrollManagementController extends Controller {
 		return view('main.payrollmanagement.payroll_process_report',['reports' => $groupReports]);
 	}
 
-	/*public function postReport(Request $request)
-	{
-		$report_att = tbl_report_model::find($request->report_name);
-
-		$i = 0;
-		$param_array = array();
-
-		while(true)
-		{
-			if (!empty($request['p'.$i])) {
-				$param_array[] = $request['p'.$i];
-			} else {
-				break;
-			}
-
-			$i++;
-		}
-
-		//dd($report_att->report_type);
-
-		if ($report_att->report_type == 'Excel') {
-			if ($report_att->report_name = 'HDMF Excel') {
-				return redirect('HDMF');
-			}
-		}
-	}*/
 }

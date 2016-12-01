@@ -25,7 +25,7 @@
 	.fld2 {
 		left:152px;
 	}
-	.sheets {
+	.shts {
 		font-size:9px;
 		top:80px;
 		left:435px;
@@ -79,16 +79,13 @@
 		right:1px;
 	}
 
-
 	.fld9 {
 		font-size:15px;
 		top:189px;
 		left:14px;
 	}
 
-
-
-	.div2 {
+	.sheets {
 		position:relative;
 		top:1500px;
 		visibility:hidden;
@@ -101,22 +98,17 @@
 	<div class = "container">
 		<span class = "section1 fld1"> {{sprintf("%02d",$fld1)}} </span>
 		<span class = "section1 fld2"> {{$fld2}}</span>
-		<span class = "section1 sheets"> {{sprintf("%02d",$sheets)}}</span>
-
+		<span class = "section1 shts"> {{sprintf("%02d",$shts)}}</span>
 		<span class = "section2 fld3"> {{substr($fld3,0,3)}} </span>
 		<span class = "section2 fld3a"> {{substr($fld3,4,3)}} </span>
 		<span class = "section2 fld3b"> {{substr($fld3,8,3)}} </span>
 		<span class = "section2 fld3c"> {{substr($fld3,12,5)}} </span>
 		<span class = "section2 fld4"> {{$fld4}} </span>
-
 		<span class = "section3 fld5"> {{$fld5}} </span>
 		<span class = "section3 fld6"> {{$fld6}} </span>
-
 		<span class = "section4 fld7"> {{$fld7}} </span>
 		<span class = "section4 fld8"> {{$fld8}} </span>
-
 		<span class = "fld9"> {{$fld9}} </span>
-		<span class = "div2"> {{$div2}} </span>
-
+		<span class = "sheets"> {{$sheets}} </span>
 	</div>
 </html>

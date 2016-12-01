@@ -5,74 +5,69 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Http\Request;
-use App\Http\Requests;
-use App\tbl_user_model;
-use App\tbl_company_model;
 use PDF;
 use FPDI;
 use DB;
-
 
 class PDFReportsController 
 {
 	public function getRformc($id) {
 
-	$results = 
-			   db::select(
+	$results = db::select(
 			   db::raw("
-			   			select 	   c.company_name,
-							  	   c.address,
-							   	   p.month_trans,
-							       p.year_trans,
-							  	   c.tin_no,
-							   	   c.bir_rdo_no,
-							       c.contact_no,
-							       c.city,
-							       c.zip,
-						  		   sum(case
-						  		   		when p.entry_type = 'CR' AND p.payroll_element_id = '1' then entry_amt
-						  		   		else 0
-						  		   end
-						  		   )e_amt,
-				   				   sum(case
-				   				   		when p.entry_type = 'DB' and p.payroll_element_id = '2' then entry_amt
-				   				   		when p.entry_type = 'DB' and p.payroll_element_id = '4' then entry_amt
-				   				   		when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
-				   				   		else 0
-				   				   	end
-				   				   )tax,
-				   				   (sum(case
-										when p.entry_type = 'CR' and p.payroll_element_id = '1' then entry_amt
-										else 0
-	            					end
-									)-
-									sum(case
-										when p.entry_type = 'DB' and p.payroll_element_id = '2' then entry_amt
-		  							    when p.entry_type = 'DB' and p.payroll_element_id = '4' then entry_amt
-		  							    when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
-										else 0
-		 							end
-									))net
-						from      	hr.tbl_payroll p 
-						right join  hr.tbl_company c ON c.company_id = p.company_id
-						where     	c.company_id = '$id'
-						group by  	c.company_name,
-								  	c.address, 
-								  	p.month_trans, 
-								 	p.year_trans, 
-								  	c.tin_no, 
-								  	c.bir_rdo_no, 
-								 	c.contact_no, 
-								  	c.city, 
-								  	c.zip
- 
+	select 	    c.company_name,
+			 	c.address,
+			    p.month_trans,
+			    p.year_trans,
+				c.tin_no,
+			 	c.bir_rdo_no,
+			 	c.contact_no,
+			 	c.city,
+			 	c.zip,
+				sum(case
+					when p.entry_type = 'CR' AND p.payroll_element_id = '1' then entry_amt
+						else 0
+				 	end
+				)e_amt,
+				sum(case
+				 	when p.entry_type = 'DB' and p.payroll_element_id = '2' then entry_amt
+				  	when p.entry_type = 'DB' and p.payroll_element_id = '4' then entry_amt
+				  	when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
+				 		else 0
+				 	end
+				)tax,
+				(sum(case
+					when p.entry_type = 'CR' and p.payroll_element_id = '1' then entry_amt
+						else 0
+	            	end
+				) - 
+				sum(case
+				when p.entry_type = 'DB' and p.payroll_element_id = '2' then entry_amt
+		  			 when p.entry_type = 'DB' and p.payroll_element_id = '4' then entry_amt
+		  			 when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
+						else 0
+		 			end
+				))net
+	from      	hr.tbl_payroll p 
+	right join  hr.tbl_company c ON c.company_id = p.company_id
+	where     	c.company_id = '$id'
+	group by  	c.company_name,
+				c.address, 
+				p.month_trans, 
+				p.year_trans, 
+				c.tin_no, 
+				c.bir_rdo_no, 
+				c.contact_no, 
+				c.city, 
+				c.zip
+
 			          ")
-			);
+					);
 
 	foreach($results as $result) {
 			
-	$DATA = 	
-		   ['fld1'  => $result -> month_trans,
+	$DATA = [
+		    'fld1'  => $result -> month_trans,
 		   	'fld1a' => $result -> year_trans,
 			'fld3'  => '2',
 			'fld5'  => $result -> tin_no,
@@ -122,7 +117,7 @@ class PDFReportsController
 			'fld51' => '',
 			'fld52' => '',
 			'fld53' => '',
-			'div2'  => '',
+			'sheets'  => '',
 			];
 	}
 
@@ -151,30 +146,29 @@ class PDFReportsController
 	public function getRforme($id)
 	{
 
-	$results = 
-			   db::select(
+	$results = db::select(
 			   db::raw("
-			   			select 		p.month_trans,
-			   				   		p.year_trans,
-			   				   		c.tin_no,
-			   				   		c.bir_rdo_no,
-			   				   		c.company_name,
-			   				   		c.contact_no,
-			   				   		c.address,
-			   				   		c.city,
-			   				   		c.zip
-			   			from 	 	hr.tbl_company AS c 
-			   			right join 	hr.tbl_payroll AS p on c.company_id = p.company_id
-			   			where  		c.company_id = '$id'
-			   			group by 	p.month_trans, 
-			   						p.year_trans, 
-			   						c.tin_no, 
-			   						c.bir_rdo_no, 
-			   						c.company_name, 
-			   						c.contact_no, 
-			   						c.address, 
-			   						c.zip, 
-			   						c.city
+	select 		p.month_trans,
+			   	p.year_trans,
+			   	c.tin_no,
+			   	c.bir_rdo_no,
+			   	c.company_name,
+			   	c.contact_no,
+			   	c.address,
+			   	c.city,
+			   	c.zip
+	from 	 	hr.tbl_company AS c 
+	right join 	hr.tbl_payroll AS p on c.company_id = p.company_id
+	where  		c.company_id = '$id'
+	group by 	p.month_trans, 
+			    p.year_trans, 
+			   	c.tin_no, 
+			   	c.bir_rdo_no, 
+			   	c.company_name, 
+			   	c.contact_no, 
+			   	c.address, 
+			   	c.zip, 
+			   	c.city
 			   	")
 			);
 
@@ -191,10 +185,9 @@ class PDFReportsController
 			 'fld8' => $result -> zip,
 			 'fld9' => 'X',
 			 'shts' => '1',
-			 'div2' => 'dummy'
+			 'sheets' => '',
 			]; 
 	}
-
 
 		PDF::loadView('rforme', $DATA) -> save(public_path().'/pdfs/rforme_val.pdf');
 		$new_pdf = new FPDI();
@@ -213,32 +206,31 @@ class PDFReportsController
 
 	public function getRformf($id)
 	{
-		$results = 
-					db::select(
-				   	db::raw("
-				   		select 	 	p.month_trans,
-			   				     	p.year_trans,
-			   				   	 	c.tin_no,
-			   				   	 	c.bir_rdo_no,
-			   				   	 	c.company_name,
-			   				   	 	c.contact_no,
-			   				   	 	c.address,
-			   				   	 	c.city,
-			   				   	 	c.zip
-			   			from 	 	hr.tbl_company AS c 
-			   			full join 	hr.tbl_payroll AS p on c.company_id = p.company_id
-			   			where       c.company_id = '$id'
-			   			group by 	p.month_trans, 
-			   						p.year_trans, 
-			   						c.tin_no, 
-			   						c.bir_rdo_no, 
-			   						c.company_name, 
-			   						c.contact_no, 
-			   						c.address, 
-			   						c.zip, 
-			   						c.city
-				   	")
-				   );
+	$results =  db::select(
+			   	db::raw("
+	select 	 	p.month_trans,
+			   	p.year_trans,
+			   	c.tin_no,
+			   	c.bir_rdo_no,
+			   	c.company_name,
+			   	c.contact_no,
+			   	c.address,
+			   	c.city,
+			   	c.zip
+	from 	 	hr.tbl_company AS c 
+	join 		hr.tbl_payroll AS p on c.company_id = p.company_id
+	where       c.company_id = '$id'
+	group by 	p.month_trans, 
+			   	p.year_trans, 
+			   	c.tin_no, 
+			   	c.bir_rdo_no, 
+			   	c.company_name, 
+			   	c.contact_no, 
+			   	c.address, 
+			   	c.zip, 
+			   	c.city
+				   ")
+				);
 
 	foreach($results as $result) {
 
@@ -253,7 +245,7 @@ class PDFReportsController
 			 'fld8' => $result -> zip,
 			 'fld9' => 'X',
 			 'shts' => '1',
-			 'div2' => 'dummy'
+			 'sheets' => '',
 			];
 	}
 		PDF::loadView('rformf', $DATA) -> save(public_path() .'/pdfs/rformf_val.pdf');

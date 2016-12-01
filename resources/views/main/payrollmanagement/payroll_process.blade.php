@@ -475,7 +475,7 @@ $(document).ready(function() {
 	});
 	
 	@if(Session::has('add-failed'))
-	UIkit.modal('#add').show();
+	UIkit.modal('#generate').show();
 	@elseif(Session::has('put-failed'))
 	$(".btn_profile").click();
 	@endif
