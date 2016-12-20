@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-//use App\Http\Classes\PayrollRun;		// 20161012 updated by Melvin Militante for job queues
-use App\Jobs\PayrollJob;				// 20161012 added by Melvin Militante for job queues
+use App\Jobs\PayrollJob;
 use App\tbl_payroll_earndedn_model;
 use App\tbl_payroll_element_model;
 use App\tbl_payroll_group_model;
@@ -23,7 +22,7 @@ use Validator;
 use DateTime;
 
 class PayrollManagementController extends Controller {
-	//
+
 	public function recurring() {
 		$entry_type = Input::get('entry_type');
 		$payroll_elements = tbl_payroll_element_model::
@@ -152,7 +151,7 @@ class PayrollManagementController extends Controller {
 				, 'ded_philhealth_sb_amt' => empty($request->ded_philhealth_sb_amt) ? 0 : $request->ded_philhealth_sb_amt
 				, 'created_by' => $this->currentUser->user_id
 				, 'updated_by' => $this->currentUser->user_id
-				, 'status' => 0 // 20161018 added by Melvin Militante; Reason: It was needed on query for payroll run but doesn't seem to have any significance on the system.
+				, 'status' => 0
 				, 'company_id' => $this->currentCompany->company_id,
 			]);
 			Session::flash('add-success', 'New payroll profile has been added successfully');
@@ -209,10 +208,7 @@ class PayrollManagementController extends Controller {
 	}
 
 	public function getRearningsdedn() {
-		/* 20161019 update from Brian Condino
-			-Reason: To see only employee for the selected company
-		*/
-		//$rearndedns = tbl_recur_earndedn_model::get();
+		
 		$rearndedns = tbl_recur_earndedn_model::
 			where('active_flag', 'Y')
 			->whereIn('employee_id',
@@ -221,7 +217,7 @@ class PayrollManagementController extends Controller {
 					->where('active_flag', 'Y')
 					->lists('employee_id'))
 			->get();
-		/* 20161019 end of update */
+
 		$employee = \App\tbl_employee_model::select(
 			DB::raw("first_name || ' ' || last_name || ' (' || employee_number || ')' as employee, employee_id"))
 			->where('active_flag', 'Y')
@@ -266,46 +262,7 @@ class PayrollManagementController extends Controller {
 	}
 
 	public function putRearningsdedn(Request $request) {
-		/* 20161019 update from Brian
-			-Reason: To add delete function
-		*/
-		/*if ($request->isDelete) {
-			if (count($request->earndedns) > 0) {
-				foreach ($request->earndedns as $profiles) {
-					tbl_payroll_profile_model::find($sss_tbl)->update([
-						'active_flag' => 'N',
-						'updated_by' => $this->currentUser->user_id,
-					]);
-				}
-				Session::flash('del-success', 'Records selected have been deleted successfully.');
-			} else {
-				Session::flash('del-warning', 'No selected records found! Nothing to delete.');
-			}
-		} else {
-			$put_rearndedn_rule = [
-				'employee_id' => 'required'];
-			$put_rearndedn_msg = [
-				'employee_id.required' => 'Employee is a required field.'];
-			$validator = Validator::make($request->all(), $put_rearndedn_rule, $put_rearndedn_msg);
-			if ($validator->fails()) {
-				Session::flash('put-failed', 'Failed to add input details!');
-				return redirect()->back()->withErrors($validator)->withInput();
-			} else {
-				tbl_recur_earndedn_model::where('recur_earndedn_id', $request->recur_earndedn_id)->update([
-					'employee_id' => $request->employee_id
-					, 'payroll_element_id' => $request->payroll_element_id
-					, 'dbcr_mode' => $request->dbcr_mode
-					, 'amount' => $request->amount
-					, 'date_start' => DateTime::createFromFormat('m/d/Y', $request->date_start)->format('Y-m-d')
-					, 'date_end' => DateTime::createFromFormat('m/d/Y', $request->date_end)->format('Y-m-d')
-					, 'status' => $request->status
-					, 'payment_ctr' => $request->payment_ctr
-					, 'created_by' => $this->currentUser->user_id
-					, 'updated_by' => $this->currentUser->user_id,
-				]);
-				Session::flash('put-success', 'Recurring Earning and Deduction has been added successfully.');
-			}
-		}*/
+
 		if ($request->isDelete) {
 			if (count($request->earndedns) > 0) {
 				foreach ($request->earndedns as $earndedns) {
@@ -414,22 +371,6 @@ class PayrollManagementController extends Controller {
 		$sample = DB::table('hr.tbl_payroll_process')
 					->where('company_id', $this->currentCompany->company_id)
 					->orderBy('created_at')
-					//->select('tbl_payroll_process.payroll_process_id'
-					//		,'tbl_payroll_process.year'
-					//		,'tbl_payroll_process.month'
-					//		,'tbl_payroll_process.payroll_group_id'
-					//		,'tbl_payroll_process.payroll_mode'
-					//		,'tbl_payroll_process.process_type'
-					//		,'tbl_payroll_process.business_unit_id'
-					//		,'tbl_payroll_process.date_from'
-					//		,'tbl_payroll_process.date_to'
-					//		,'tbl_payroll_process.temp_run_flag'
-					//		,'tbl_payroll_process.
-					//		,'tbl_payroll_process.
-					//		,'tbl_payroll_process.
-					//		,'tbl_payroll_process.
-					//		,'tbl_payroll_process.
-					//		)
 					->get();
 		
 		$pay_proc_rec = tbl_payroll_process_model::
@@ -443,7 +384,7 @@ class PayrollManagementController extends Controller {
 
 	public function postPayrollprocess(Request $request) {
 		if ($request->isAdd) {
-			$process_type = '1'; //assume that all employees are included ; for update
+			$process_type = '1';
 			$post_pay_proc_rules = [
 				'year' => 'required'
 				, 'payroll_period_id' => 'required'
@@ -463,10 +404,8 @@ class PayrollManagementController extends Controller {
 				, 'profile_count.size' => 'Payroll profile is not yet set for the selected group.'
 			];
 
-			// Validate if payroll template parameter for the selected company is set.
 			$request['pay_temp_param'] = db::table('hr.tbl_payroll_parameter')->where('company_id', $this->currentCompany->company_id)->count();
 
-			// Validate that there is no other entry with same payroll period and group is present and not status = 'Failed'
 			$request['duplicate_entry'] = db::table('hr.tbl_payroll_process')
 											->join('hr.tbl_payroll_period', function ($join) {
 												$join->on('hr.tbl_payroll_process.company_id', '=', 'hr.tbl_payroll_period.company_id')
@@ -479,7 +418,6 @@ class PayrollManagementController extends Controller {
 											->where('hr.tbl_payroll_process.company_id', $this->currentCompany->company_id)
 											->count();
 
-			// Validate that payroll profile was setup for the selected payroll group
 			$request['profile_count'] = db::table('hr.tbl_payroll_group')
 											->join('hr.tbl_payroll_profile', 'hr.tbl_payroll_group.payroll_group_id', '=', 'hr.tbl_payroll_profile.payroll_group_id')
 											->where('hr.tbl_payroll_group.payroll_group_id', $request->payroll_group_id)
@@ -534,18 +472,6 @@ class PayrollManagementController extends Controller {
 					, 'created_by' => $this->currentUser->user_id
 					, 'updated_by' => $this->currentUser->user_id,]
 				);
-
-				/* 20161012 updated by Melvin Militante (will be replaced by queue jobs instead on synchronous process) */
-				//$payrollRun = new PayrollRun();
-				//$payrollRun->main(
-				//	$process_type
-				//	, $ins_pay_proc->payroll_process_id
-				//	, $this->currentCompany->company_id
-				//	, $request->payroll_group_id
-				//	, $request->payroll_period_id
-				//	, $date_from
-				//	, $date_to
-				//);
 				
 				$job = (new PayrollJob
 							($process_type
@@ -561,17 +487,10 @@ class PayrollManagementController extends Controller {
 						->onQueue('processing');
 				
 				$this->dispatch($job);
-
-						
-				/* 20161012 end of update */
 				
 			}
 			Session::flash('add-success', 'New payroll process has been generated successfully.');
 		} else {
-			
-			/* 20161013 updated by Melvin Militante
-				-Reason: To add regenerate functionality for payroll process but avoiding finalized rows
-			*/
 
 			if (count($request->payrollprocess) > 0) {
 				
@@ -622,8 +541,6 @@ class PayrollManagementController extends Controller {
 				if($regen_rows > 0) Session::flash('add-success', $regen_rows.' record(s) selected has been regenerated.');
 				
 				if($final_rows > 0) Session::flash('add-warning','Cannot regenerate '.$final_rows.' record(s) on selected because it is marked as final');
-				
-			/* 20161013 end of update */
 
 			} else {
 				Session::flash('add-warning', 'No selected records found! Nothing to regenerate.');
@@ -632,9 +549,6 @@ class PayrollManagementController extends Controller {
 		return redirect()->back();
 	}
 	
-	/* 20161007 update by Melvin Militante
-		-Reason: To add delete functionality for payroll process but avoiding finalized rows
-	*/
 	public function deletePayrollprocess(Request $request)
 	{
 		if (count($request->payrollprocess) > 0) {
@@ -670,11 +584,7 @@ class PayrollManagementController extends Controller {
 		
 		return redirect()->back();
 	}
-	/* 20161007 end of update */
 
-	/* 20161013 updated by Melvin Militante
-		-Reason: To add finalize functionality for payroll process
-	*/
 	public function putPayrollprocess(Request $request)
 	{
 		if (count($request->payrollprocess) > 0) {
