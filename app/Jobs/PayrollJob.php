@@ -41,12 +41,8 @@ class PayrollJob extends Job implements ShouldQueue
 		set_time_limit(0);
 		ini_set('memory_limit','1056M');
 		
-		echo $this->date_from;
-		
-        //SQL 1
 		$pay_proc_rec = $this->sel_payProc($this->payroll_process_id, $this->company_id, $this->payroll_group_id);
 			
-		/* TODO: Transfer this section on the part of creating entry on tbl_payroll_process */
         $emp_rec = db::select(
             db::raw("select emp.employee_id
 					from hr.tbl_employee emp
@@ -69,16 +65,13 @@ class PayrollJob extends Job implements ShouldQueue
 			}
         } 
 		 else {
-		//	if($process_type == '0')
+			
         }
-		/* TODO: End of section */
 		
-		//select parameter values
 		$param_rec = $this->sel_payParam($this->company_id);
 		
 		foreach($pay_proc_rec as $process)
 		{
-			//SQL2
 			$pay_prof_rec = $this->sel_payProf($this->payroll_process_id, $this->payroll_period_id, $this->payroll_group_id, $this->company_id);
 			$prof_count = count($pay_prof_rec);
 			$i = 0;
@@ -158,7 +151,6 @@ class PayrollJob extends Job implements ShouldQueue
 					$this->add_tax($process, $profile, $param_rec, $profile->employee_id);
 				}
 				
-				// TODO: Other more processes are executed here (eg. loans, recurring deductions with priority, net take home pay, sequences, etc.)
 
 				$i++;
 
@@ -180,13 +172,10 @@ class PayrollJob extends Job implements ShouldQueue
 	 */
 	public function failed()
 	{
-		// Delete entries created on tbl_payroll if there is one
 		DB::table('hr.tbl_payroll')->where('payroll_process_id', $this->payroll_process_id)->delete();
-		// Set payroll process to failed
 		$this->updateStatusPayProc($this->payroll_process_id, 'Failed');
 	}
 	
-	//SQL1
     public function sel_payProc	($payroll_process_id
 								,$company_id
 								,$payroll_group_id)
@@ -248,7 +237,6 @@ class PayrollJob extends Job implements ShouldQueue
         return $proc_rec;
     }
 	
-	//select parameter values
     public function sel_payParam($company_id)
     {
         $pay_param_rec = db::select(
@@ -284,7 +272,6 @@ class PayrollJob extends Job implements ShouldQueue
         return $pay_param_rec;
     }
 	
-	//SQL2
     public function sel_payProf	($pay_proc_id
 								,$pay_period_id
 								,$pay_grp_id
@@ -361,7 +348,6 @@ class PayrollJob extends Job implements ShouldQueue
 
     }
 	
-	//basic amount computation
     public function init_Basic	($salary_type
 								,$basic_amt
 								,$hrs_day
@@ -380,7 +366,6 @@ class PayrollJob extends Job implements ShouldQueue
         return $basic;
     }
 	
-	//insert into tbl_payroll
     public function add_payroll	($payroll_process_id
 								,$employee_id
 								,$company_id
@@ -464,7 +449,6 @@ class PayrollJob extends Job implements ShouldQueue
 								,$pay_grp_id
 								,$special_run_flag)
 	{
-        //SQL3 Earnings/Deduction
         $earn_rec = db::select(
             db::raw("select earn.payroll_earndedn_id
 			,earn.employee_id
@@ -575,7 +559,6 @@ class PayrollJob extends Job implements ShouldQueue
 								,$date_to
 								,$payroll_group_id)
 	{
-        //SQL3 Recurring Earnings/Deductions
         $recur_earndedn_rec = db::select(
             db::raw("select rec.recur_earndedn_id
 					,rec.employee_id
@@ -703,7 +686,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,$earn->payment_ctr
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 		}	
 	}
 	
@@ -752,7 +735,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,$recur_earn->payment_ctr
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 		}
 	}
 	
@@ -836,7 +819,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,$dedn->payment_ctr
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 			}
 			
 		}
@@ -920,7 +903,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,$recur_dedn->payment_ctr
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 			}
 		}
 	}
@@ -1067,7 +1050,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 				}
 				
 				if ($dblERCont > 0) {
@@ -1102,7 +1085,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 				}
 				
 				if ($dblEREC > 0) {
@@ -1137,7 +1120,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 				}
 			}
 		}
@@ -1298,7 +1281,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 					}
 					
 					if ($dblERCont > 0){
@@ -1333,7 +1316,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated);
+								,null);
 					}
 				}
 			}
@@ -1464,7 +1447,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 			}
 			
 			if ($dblERCont > 0){
@@ -1499,7 +1482,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 			}
 		}
 	}
@@ -1509,7 +1492,6 @@ class PayrollJob extends Job implements ShouldQueue
 		
 		$proc_rec = null;
 		
-		//sql4
 		$sql_annual = 	"SELECT	a.employee_id AS emp_tran_id
 						,		(a.last_name || ', ' || a.first_name || ' ' || LEFT(a.middle_name, 1) || '. (' || a.employee_number || ')') AS emp_name
 						,		a.company_id
@@ -1562,7 +1544,7 @@ class PayrollJob extends Job implements ShouldQueue
 						WHERE	a.company_id		= '$process->company_id'
 						AND		c.payroll_group_id	= '$process->payroll_group_id'
 						AND		f.income			> 0";
-		//sql5
+
 		$sql_range1 =	"SELECT	a.employee_id
 						,		(b.last_name || ', ' || b.first_name || ' ' || LEFT(b.middle_name, 1) || '. (' || b.employee_number || ')') AS emp_name
 						,		a.company_id
@@ -1649,7 +1631,7 @@ class PayrollJob extends Job implements ShouldQueue
 																		AND	j.company_id		= a.company_id
 																		AND	j.region			= i.region
 						WHERE a.company_id = '$process->company_id'";
-		//sql6
+
 		$sql_range2 =	"SELECT	a.employee_id
 						,		(b.last_name || ', ' || b.first_name || ' ' || LEFT(b.middle_name, 1) || '. (' || b.employee_number || ')') AS emp_name
 						,		a.company_id
@@ -1759,8 +1741,7 @@ class PayrollJob extends Job implements ShouldQueue
 						WHERE		a.company_id	= '$process->company_id'";
 		
 		
-		//if(!empty($param_rec->annualize_income_mo)) {
-		if(!empty($param_rec->annualize_income_mo) && ($param_rec->annualize_income_mo == substr(strtolower(date('F', mktime(0, 0, 0, $process->month, 10))),0,3))) {	// 20161010 updated by Melvin Militante
+		if(!empty($param_rec->annualize_income_mo) && ($param_rec->annualize_income_mo == substr(strtolower(date('F', mktime(0, 0, 0, $process->month, 10))),0,3))) {
 			
 			$proc_rec = db::select(db::raw($sql_annual));
 			
@@ -1768,7 +1749,7 @@ class PayrollJob extends Job implements ShouldQueue
 			
 			if($process->special_run_flag == 'Y') {
 				
-				// TODO: To determine what sql to execute
+
 				
 			} else {
 				
@@ -1786,15 +1767,11 @@ class PayrollJob extends Job implements ShouldQueue
 					
 				} elseif($param_rec->tax_method == 2) {
 					
-					// TODO: To determine what sql to execute (cumulative)
-					
 				} elseif($param_rec->tax_method == 3) {
 					
 					$proc_rec = db::select(db::raw($sql_annual));
 					
 				} elseif($param_rec->tax_method == 4) {
-					
-					// TODO: To determine what sql to execute (projected)
 					
 				}
 				
@@ -1843,7 +1820,6 @@ class PayrollJob extends Job implements ShouldQueue
 			
 			if ($process->special_run_flag != 'Y') {
 				
-				//if (!empty($param_rec->annualize_income_mo)) {
 				if (!empty($param_rec->annualize_income_mo) && ($param_rec->annualize_income_mo == substr(strtolower(date('F', mktime(0, 0, 0, $process->month, 10))),0,3))) {
 					
 					$dblWithTax = !empty($tax->with_tax)? $tax->with_tax : 0;
@@ -1862,19 +1838,15 @@ class PayrollJob extends Job implements ShouldQueue
 						
 					} elseif ($param_rec->tax_method == 2) {
 						
-						// TODO: To determine process/computation on cumulative tax
-						
 					}
 					
 				}
 				
 			}
 			
-			// TODO: A first if is placed here regarding MWE
 			
 			if ($dblTotal > 0) {
 				
-				//if (!empty($param_rec->annualize_income_mo)) {
 				if (!empty($param_rec->annualize_income_mo) && ($param_rec->annualize_income_mo == substr(strtolower(date('F', mktime(0, 0, 0, $process->month, 10))),0,3))) {
 					
 					$v_element_id = '12';
@@ -1889,7 +1861,7 @@ class PayrollJob extends Job implements ShouldQueue
 							if ($process->auto_refund_flag == 'Y') {
 								$dblTax = $dblWithTax - $dblTax;
 								$dblTaxRefund = $dblWithTax - $dblTax;
-								$v_element_id = '00044';		// TODO: Need to determine if this should stay as hard coded
+								$v_element_id = '00044';
 								$v_entry_type = 'CR';
 							} else {
 								$dblTaxRefund = 0;
@@ -1934,7 +1906,7 @@ class PayrollJob extends Job implements ShouldQueue
 								,0
 								,$basic
 								,$process->days_mo
-								,null); // TODO: will change this if tbl_wage_order will be updated
+								,null);
 					} else {
 						
 						if ($v_entry_type == 'DB') {
@@ -1969,7 +1941,7 @@ class PayrollJob extends Job implements ShouldQueue
 									,0
 									,$basic
 									,$process->days_mo
-									,null); // TODO: will change this if tbl_wage_order will be updated
+									,null);
 						} elseif ($v_entry_type == 'CR') {
 							
 							if ($process->auto_refund_flag == 'Y') {
@@ -2004,9 +1976,9 @@ class PayrollJob extends Job implements ShouldQueue
 									,0
 									,$basic
 									,$process->days_mo
-									,null); // TODO: will change this if tbl_wage_order will be updated								
+									,null);
 							} else {
-								// TODO: Check the source code of Messages.mtdTaxRefund_New
+
 							}
 						}
 					}
@@ -2055,7 +2027,7 @@ class PayrollJob extends Job implements ShouldQueue
 							,0
 							,$basic
 							,$process->days_mo
-							,null); // TODO: will change this if tbl_wage_order will be updated								
+							,null);
 				}
 			} elseif ($dblTotal == 0) {
 				$msg_tax = $this->add_payroll($process->payroll_process_id
@@ -2089,7 +2061,7 @@ class PayrollJob extends Job implements ShouldQueue
 						,0
 						,$basic
 						,$process->days_mo
-						,null); // TODO: will change this if tbl_wage_order will be updated								
+						,null);
 			}
 			
 			$dblTax = 0;
