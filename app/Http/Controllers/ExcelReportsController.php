@@ -1,58 +1,51 @@
 <?php
 
-/*@author Carlo Mendoza*/
+/*@author 
+ *
+Carlo Mendoza
+ *
+ */
 
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Http\Request;
 use App\Http\Requests;
-use App\tbl_user_model;
 use Excel;
 use PHPExcel; 
 use PHPExcel_IOFactory;
 use PHPExcel_Style_Fill;
 use PHPExcel_Worksheet_Drawing;
 use PHPEXCEL_STYLE_ALIGNMENT;
+use PHPExcel_Style_Border;
 use DB;
 
 class ExcelReportsController extends Controller
 {	
-    /*
-	 *	 Process the Pagibig Report
-	 *
-	 *   @param int $id
-	 */
 
 	public function getHdmf($id) { 
 		
-		$path = (public_path().'/excels/HDMF_Template.xltx');
-		$workbook = new PHPExcel();
-		$workbook = PHPExcel_IOFactory::load($path);
-		$workbook -> setActiveSheetIndex(0);
-		$workbook -> getProperties() -> setCreator("Carlo Mendoza")
-									 -> setTitle("HDMF");	
+	$path = (public_path().'/excels/HDMF_Template.xltx');
+	$workbook = new PHPExcel();
+	$workbook = PHPExcel_IOFactory::load($path);
+	$workbook -> setActiveSheetIndex(0);	
+	$worksheet = $workbook -> getActiveSheet();
+	$worksheet  -> getColumnDimension('A') -> setWidth(22);
+	$worksheet  -> getColumnDimension('B') -> setWidth(12);
+	$worksheet  -> getColumnDimension('C') -> setWidth(13);
+	$worksheet  -> getColumnDimension('D') -> setWidth(16);
+	$worksheet  -> getColumnDimension('E') -> setWidth(16);
+	$worksheet  -> getColumnDimension('F') -> setWidth(16);
+	$worksheet  -> getColumnDimension('G') -> setWidth(16);
+	$worksheet  -> getColumnDimension('H') -> setWidth(30);
+	$worksheet  -> getColumnDimension('I') -> setWidth(11);
+	$worksheet  -> getColumnDimension('J') -> setWidth(11);
+	$worksheet  -> getColumnDimension('K') -> setWidth(14);		  
 
-		$workbook -> getActiveSheet() -> getPageSetup() -> setFitToWidth(1)
-													    -> setFitToHeight(0);
-		$worksheet = $workbook -> getActiveSheet();
-		
-		$worksheet  -> getColumnDimension('A') -> setWidth(22);
-		$worksheet  -> getColumnDimension('B') -> setWidth(12);
-		$worksheet  -> getColumnDimension('C') -> setWidth(13);
-		$worksheet  -> getColumnDimension('D') -> setWidth(16);
-		$worksheet  -> getColumnDimension('E') -> setWidth(16);
-		$worksheet  -> getColumnDimension('F') -> setWidth(16);
-		$worksheet  -> getColumnDimension('G') -> setWidth(16);
-		$worksheet  -> getColumnDimension('H') -> setWidth(30);
-		$worksheet  -> getColumnDimension('I') -> setWidth(11);
-		$worksheet  -> getColumnDimension('J') -> setWidth(11);
-		$worksheet  -> getColumnDimension('K') -> setWidth(14);		  
+	$d_today = date("Y/m/d");
+	$index = 6;
 
-		$d_today = date("Y/m/d");
-		$index = 6;
-//QUERY
-		$results = db::select(
-				   db::raw("
+	$results = db::select(
+			   db::raw("
 							select      c.company_name,
 										e.hdmf_no,
 										c.address,
@@ -92,204 +85,86 @@ class ExcelReportsController extends Controller
 								")
 							);
 
-		$dbcount = count($results);
+	$dbcount = count($results);
 
-		foreach ($results as $result) {
+	foreach ($results as $result) {
 //EXCEL POSITION					
-			$acell = ('A'.$index);
-			$ccell = ('C'.$index);
-			$dcell = ('D'.$index);
-			$ecell = ('E'.$index);
-			$fcell = ('F'.$index);
-			$gcell = ('G'.$index);
-			$hcell = ('H'.$index);
-			$icell = ('I'.$index);
-			$jcell = ('J'.$index);
+		$acell = ('A'.$index);
+		$ccell = ('C'.$index);
+		$dcell = ('D'.$index);
+		$ecell = ('E'.$index);
+		$fcell = ('F'.$index);
+		$gcell = ('G'.$index);
+		$hcell = ('H'.$index);
+		$icell = ('I'.$index);
+		$jcell = ('J'.$index);
 //QUERY RESULT
-			$worksheet -> setCellValue('B2',   $result -> company_name )
-					   -> setCellValue('B3',   $result -> address. '  '. $result -> city)
-					   -> setCellValue($acell, $result -> hdmf_no)
-					   -> setCellValue($dcell, $result -> last_name)
-					   -> setCellValue($ecell, $result -> first_name)
-					   -> setCellValue($gcell, $result -> middle_name)
-					   -> setCellValue($hcell, $result -> date_from.'  -  '.$result -> date_to)
-					   -> setCellValue($icell, $result -> emp_share)
-					   -> setCellValue($jcell, $result -> comp_share);
-			$worksheet -> getStyle($icell)
-					   -> getNumberFormat()
-					   -> setFormatCode('0.00');
-			$worksheet -> getStyle($jcell)
-					   -> getNumberFormat()
-					   -> setFormatCode('0.00'); 
+		$worksheet -> setCellValue('B2',   $result -> company_name )
+				   -> setCellValue('B3',   $result -> address. '  '. $result -> city)
+				   -> setCellValue($acell, $result -> hdmf_no)
+				   -> setCellValue($dcell, $result -> last_name)
+				   -> setCellValue($ecell, $result -> first_name)
+				   -> setCellValue($gcell, $result -> middle_name)
+				   -> setCellValue($hcell, $result -> date_from.'  -  '.$result -> date_to)
+				   -> setCellValue($icell, $result -> emp_share)
+				   -> setCellValue($jcell, $result -> comp_share);
+		$worksheet -> getStyle($icell)
+				   -> getNumberFormat()
+				   -> setFormatCode('0.00');
+		$worksheet -> getStyle($jcell)
+				   -> getNumberFormat()
+				   -> setFormatCode('0.00'); 
 //ITERATOR				
-		$index = $index + 1; 
+	$index = $index + 1; 
 			}
 
-			$dyn_val 	= ($dbcount + 5);
-			$dyn_header = ('A5'.':'.'K'.$dyn_val);
-			$dyn_border = ('A6'.':'.'K'.$dyn_val);
-			$dyn_align  = ('A6'.':'.'B'.$dyn_val);
-			$dyn_align2 = ('G6'.':'.'K'.$dyn_val);
-//STYLES
-			$white 	  = new Styles;
-			$vhcenter = new Styles;
-			$black 	  = new Styles;
-			$insthin  = new Styles;
-//DYNAMIC STYLES
-			$worksheet 					   -> getStyle($dyn_header) -> applyFromArray($black -> getBlack())
-					   -> getActiveSheet() -> getStyle($dyn_border) -> applyFromArray($insthin -> getInsThin())
-					   -> getActiveSheet() -> getStyle($dyn_align)  -> applyFromArray($vhcenter -> getVertHoriCenter())
-					   -> getActiveSheet() -> getStyle($dyn_align2) -> applyFromArray($vhcenter -> getVertHoriCenter());
+		$dyn_val 	= ($dbcount + 5);
+		$dyn_header = ('A5'.':'.'K'.$dyn_val);
+		$dyn_border = ('A6'.':'.'K'.$dyn_val);
+		$dyn_align  = ('A6'.':'.'B'.$dyn_val);
+		$dyn_align2 = ('G6'.':'.'K'.$dyn_val);
 
-		// foreach (range('A', $workbook -> getActiveSheet() -> getHighestDataColumn()) as $col) {
-  //       		$workbook -> getActiveSheet()
-  //               		  -> getColumnDimension($col)
-  //              			  -> setAutoSize(true);
-  //  				 } 
-		$objWriter = PHPExcel_IOFactory::createWriter($workbook, 'Excel5');
-		// // We'll be outputting an excel file
-		header('Content-type: application/vnd.ms-excel');
-		// // It will be called file.xls
-		header('Content-Disposition: attachment; filename="HDMF_'.$d_today.'.xls"');
-		// Write file to the browser
-		$objWriter -> save('php://output');
-		$workbook -> disconnectWorksheets();
-		unset($workbook);
+//Styles
+	$vhcenter = array(
+		'alignment' => array(
+			'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+			'vertical'   => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+			)
+		);
 
+	$insthin = array(
+		'borders' => array(
+			'inside' => array(
+				'style' => PHPExcel_Style_Border::BORDER_THIN,
+				'color' => array('argb' => '00000000')
+				))
+			);
+	
 
+	$black = array(
+		'borders' => array(
+			'outline' => array(
+				'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+				'color' => array('argb' => '00000000')
+				))
+			);
 		
-// 		$file_type = 'xls';
-// 		$data =	
-// 				[
-// 				['EMPLOYER ID'],
-// 				['EMPLOYER NAME'],
-// 				['ADDRESS'],
-// 				['MEMBERSHIP PROG'],
-// 				[],
-// 				['Pag-IBIG ID','RTN	ACCOUNT NO','LAST NAME',
-// 				'FIRST NAME','NAME EXTENSION','MIDDLE NAME',
-// 				'PERIOD COVERED','EE SHARE','ER SHARE','REMARKS'],
-// 				];
+//DYNAMIC STYLES
+	$worksheet -> getStyle($dyn_header) -> applyFromArray($black);
+	$worksheet -> getStyle($dyn_border) -> applyFromArray($insthin);
+	$worksheet -> getStyle($dyn_align)  -> applyFromArray($vhcenter);
+	$worksheet -> getStyle($dyn_align2) -> applyFromArray($vhcenter);
 
-// 		excel::create('HDMF_'.$d_today, function($hdmf) use ($data, $id) {
-
-// 			$hdmf -> sheet('HDMF_Sheet', function($sheet) use ($data, $id) {	
-
-// 				$sheet -> fromArray($data);
-// 				$sheet -> setStyle(array(
-// 					'font' => array(
-// 						'name' => 'Calibri',
-// 						'size' => '11',
-// 						)
-// 					));
-// //STYLES
-// 				$white 	  = new Styles;
-// 				$vhcenter = new Styles;
-// 				$black 	  = new Styles;
-// 				$insthin  = new Styles;
-
-// 				$sheet -> getStyle('A1:J6') -> applyFromArray($white -> getWhite());
-// 				$sheet -> getStyle('A2:A5') -> getFont() -> setSize(12);
-// 				$sheet -> getStyle('A2:A5') -> getFont() -> setBold(true);
-// 				$sheet -> getStyle('A7:J7') -> getFont() -> setSize(12);
-// 				$sheet -> getStyle('A7:J7') -> getFont() -> setBold(true);
-// 				$sheet -> getStyle('A7:J7') -> applyFromArray($vhcenter -> getVertHoriCenter());
-// 				$sheet -> getStyle('A7:J7') -> applyFromArray($black -> getBlack());
-// 				$sheet -> getStyle('A7:J7') -> applyFromArray($insthin -> getInsThin());				
-//                 $sheet -> setWidth(array(
-//                 	'A' => 23, 'B' => 20, 'C' => 20, 'D' => 20,
-//                 	'E' => 20, 'F' => 20, 'G' => 23, 'H' => 12, 
-//                 	'I' => 12, 'J' => 17
-//                 	                    )
-//                 				  );
-// 				$index = 8;
-// 				$results = db::select(
-// 						   db::raw("
-// 									select   	c.company_name,
-// 												e.hdmf_no,
-// 												c.address,
-// 												c.city,
-// 												upper(e.last_name) as last_name,
-// 												upper(e.first_name) as first_name,
-// 												upper(e.middle_name) as middle_name,
-// 												TO_CHAR(p.date_to,'MM-DD-YYYY') as date_to, 
-// 												TO_CHAR(p.date_from,'MM-DD-YYYY')as date_from,
-// 												sum(case
-// 													when p.entry_type = 'DB' and p.payroll_element_id = '5' 
-// 																			 and e.employee_id 		  = p.employee_id then entry_amt
-// 													else 0
-// 												end
-// 												)emp_share,
-// 												sum(case
-// 													when p.entry_type = 'EE' and p.payroll_element_id = '11' 
-// 																	 		 and e.employee_id 	      = p.employee_id then entry_amt
-// 													else 0
-// 												end
-// 												)comp_share
-// 									from 		hr.tbl_employee e
-// 									join 		hr.tbl_company  c on e.company_id = c.company_id 
-// 									join 		hr.tbl_payroll  p on e.company_id = p.company_id
-// 									where  		c.company_id = '$id' and e.active_flag = 'Y'
-
-// 									group by 	c.company_name, 
-// 												c.address, 
-// 												c.city, 
-// 												e.last_name,
-// 												e.first_name, 
-// 												e.middle_name, 
-// 												p.date_to, 
-// 												p.date_from,
-// 												e.hdmf_no
-// 									")
-// 								   );
-
-// 				$dbcount = count($results);
-
-// 				foreach ($results as $result) {
-// //EXCEL POSITION					
-// 					$acell = ('A'.$index);
-// 					$ccell = ('C'.$index);
-// 					$dcell = ('D'.$index);
-// 					$fcell = ('F'.$index);
-// 					$gcell = ('G'.$index);
-// 					$hcell = ('H'.$index);
-// 					$icell = ('I'.$index);
-
-// 					$sheet -> setCellValue('B3',   $result -> company_name );
-// 					$sheet -> setCellValue('B4',   $result -> address. '  '. $result -> city);
-// 					$sheet -> setCellValue($acell, $result -> hdmf_no);
-// 					$sheet -> setCellValue($ccell, $result -> last_name);
-// 					$sheet -> setCellValue($dcell, $result -> first_name);
-// 					$sheet -> setCellValue($fcell, $result -> middle_name);
-// 					$sheet -> setCellValue($gcell, $result -> date_from.'  -  '.$result -> date_to);
-// 					$sheet -> setCellValue($hcell, $result -> emp_share);
-// 					$sheet -> getStyle($hcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 					$sheet -> setCellValue($icell, $result -> comp_share);
-// 					$sheet -> getStyle($icell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 				$index = $index + 1; //ITERATOR
-// 				}
-
-// 				$dyn_val 	= (7 + $dbcount);
-// 				$dyn_border = ('A8'.':'.'J'.$dyn_val);
-// 				$dyn_align  = ('A8'.':'.'B'.$dyn_val);
-// 				$dyn_align2 = ('G8'.':'.'J'.$dyn_val);
-// 				$sheet -> getStyle($dyn_border) -> applyFromArray($black -> getBlack());
-// 				$sheet -> getStyle($dyn_border) -> applyFromArray($insthin -> getInsThin());
-// 				$sheet -> getStyle($dyn_align)  -> applyFromArray($vhcenter -> getVertHoriCenter());
-// 				$sheet -> getStyle($dyn_align2)  -> applyFromArray($vhcenter -> getVertHoriCenter());
-
-// 			});
-
-// 	})->download($file_type);
-
+	$objWriter = PHPExcel_IOFactory::createWriter($workbook, 'Excel5');
+	header('Content-type: application/vnd.ms-excel');
+	header('Content-Disposition: attachment; filename="HDMF_'.$d_today.'.xls"');
+	$objWriter -> save('php://output');
+	$workbook -> disconnectWorksheets();
+	unset($workbook);
+	
 }
 
 	public function getPayroll($id) {
-
 
 	$path = (public_path().'/excels/PayrollRegister_Template.xltx');
 	$workbook = new PHPExcel();
@@ -445,13 +320,23 @@ class ExcelReportsController extends Controller
 				$jtot 		= ('J2'.':'.'J'.$dyn_val);
 				$utot 		= ('U2'.':'.'U'.$dyn_val);
 
-				$vhcenter = new Styles;
-				$black    = new Styles;
-				$insmed   = new Styles;
-				$insthin  = new Styles;
+			
+	$black = array(
+			'borders' => array(
+				'outline' => array(
+					'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+					'color' => array('argb' => '00000000')
+					)));
+	
+	$insthin = array(
+			'borders' => array(
+				'inside' => array(
+					'style' => PHPExcel_Style_Border::BORDER_THIN,
+					'color' => array('argb' => '00000000')
+					)));
 
-				$worksheet -> getStyle($dyn_border) -> applyFromArray($black -> getBlack());
-				$worksheet -> getStyle($dyn_align) -> applyFromArray($insthin -> getInsThin());
+				$worksheet -> getStyle($dyn_border) -> applyFromArray($black);
+				$worksheet -> getStyle($dyn_align) -> applyFromArray($insthin);
 				$worksheet -> getStyle('B'.$dyn_val2.':'.'U'.$dyn_val2) 
 						   -> getFont() 
 						   -> setBold(true);
@@ -481,304 +366,114 @@ class ExcelReportsController extends Controller
 		$workbook -> disconnectWorksheets();
 		unset($workbook);
 
-
-// 		excel::create('PayrollRegister_'.$d_today, function($payroll) use ($id) {	
-
-// 			$payroll -> sheet('Payroll Summary', function($sheet) use ($id) {
-
-// 			$head = array(
-// 					'EMPLOYEE NO',
-// 					'EMPLOYEE NAME',
-// 					'GROSS PAY',
-// 					'SSS',
-// 					'Philhealth',
-// 					'HDMF',
-// 					'Taxable Income',
-// 					'Withholding Tax',
-// 					'Net Pay with no Absences and Reimbursements',
-// 					'Absences',
-// 					'Deductions Due to Absences',
-// 					'HDMF Loan',
-// 					'SSS Loan',
-// 					'Cash Advance',
-// 					'Reimbursements',
-// 					'Overtime/NSD','Other Deductions',
-// 					'Total Adjustments	Notes',
-// 					'Net Pay'
-// 					);
-	
-// 			$data = array($head);
-// 			$sheet -> fromArray($head, null, 'A1',false, false);
-// //STYLES
-// 			$vhcenter = new Styles;
-// 			$black    = new Styles;
-// 			$insmed   = new Styles;
-// 			$insthin  = new Styles;
-		
-// 			$sheet -> getStyle('A1:S1') -> getFont() -> setSize(12);
-// 			$sheet -> getStyle('A1:S1') -> getFont() -> setBold(true);
-// 			$sheet -> getStyle('A1:S1') -> applyFromArray($vhcenter -> getVertHoriCenter());
-// 			$sheet -> getStyle('A1:S1') -> applyFromArray($black -> getBlack());
-// 			$sheet -> getStyle('A1:S1') -> applyFromArray($insmed -> getInsMed());
-// 			$sheet->setFreeze('A1');
-// 			$sheet->setFreeze('C2');
-
-// 			$sheet -> setWidth(array(
-// 					'A' => 16, 'B' => 30, 'C' => 14, 'D' => 8,  'E' => 14,
-// 					'F' => 8,  'G' => 18, 'H' => 18, 'I' => 50, 'J' => 14,
-// 					'K' => 30, 'L' => 14, 'M' => 14, 'N' => 16, 'O' => 19,
-// 					'P' => 20, 'Q' => 20, 'R' => 28, 'S' => 16		
-// 					));
-// 			$sheet -> setHeight(1, 35);
-// 			$sheet -> setStyle(array(
-// 				'font' => array(
-// 					'name' => 'Calibri',
-// 					'size' => '10',)
-// 									)
-// 							  );
-
-// 			$records = db::select(
-// 		   			   db::raw("
-// 		   						select 	e.employee_number,
-// 						    	(e.last_name || ', ' || e.first_name || '  ' ||e.middle_name) as employee,
-
-// -- GROSS PAY
-// 								sum(case
-// 							    	when p.entry_type = 'CR' and p.payroll_element_id = '1' then entry_amt
-// 							    	else 0
-// 						        end
-// 						    	)gross,
-// -- SSS
-// 			   					sum(case
-// 			   						when p.entry_type = 'DB' and p.payroll_element_id = '2' then entry_amt
-// 			   						else 0
-// 			   					end
-// 			   					)sss,
-// -- PHILHEALTH
-// 			   		        	sum(case 
-// 			   		                when p.entry_type = 'DB' and p.payroll_element_id = '4' then entry_amt
-// 			   		                else 0
-// 			   		            end
-// 			   		        	)philhealth,
-// -- PAGIBIG HDMF
-// 			   			    	sum(case 
-// 			   		                when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
-// 			   		                else 0
-// 			   		            end
-// 			   		        	)hdmf,
-// -- TAXABLE INCOME
-// 			   					sum(case
-// 									when p.entry_type = 'CR' and p.payroll_element_id = '1' THEN entry_amt
-// 									else 0
-// 								end) -
-// 								sum(case
-// 									when p.entry_type = 'DB'        and p.payroll_element_id = '2'
-// 									or   p.payroll_element_id = '4' or  p.payroll_element_id = '5'
-// 									 THEN entry_amt
-// 									else 0
-// 								end) 
-// 								taxinc,
-								
-
-// -- WITHOLDING TAX
-// 								sum(case
-// 									when p.entry_type ='DB' and p.payroll_element_id ='12' then entry_amt
-// 									else 0
-// 								end
-// 								)withtax,
-
-// -- NETPAYNOABSENCE
-// 								sum(case
-// 									when p.entry_type = 'CR' and p.payroll_element_id = '1' then entry_amt
-// 									else 0
-// 								end) -
-// 								sum(case
-// 									when p.entry_type = 'DB' and p.payroll_element_id = '2' 
-// 									or   p.payroll_element_id = '4' or p.payroll_element_id = '5' then entry_amt
-// 									else 0
-// 								end) -
-// 								sum(case
-// 									when p.entry_type ='DB' and p.payroll_element_id ='12' then entry_amt
-// 									else 0
-// 								end) 
-// 								npnoabs
-
-// 			   		from		hr.tbl_employee e 
-
-// 					join		hr.tbl_company  c ON e.company_id = c.company_id 
-// 					join		hr.tbl_payroll  p ON e.company_id = p.company_id
-// 			  		where 		c.company_id  = '$id' 	
-// 			  					and	e.active_flag = 'Y'
-// 								and e.employee_id = p.employee_id												
-// 			  		group by    e.employee_number, employee
-// 			  		order by    e.employee_number
-// 			   						")
-// 								);	
-
-// 			$iterator = 2;	
-// 			$dbcount = count($records);	
-// 			$dyn_val 	= (1 + $dbcount);
-// 			$dyn_val2   = ($dyn_val + 1);
-
-// 			$dyn_border = ('A2'.':'.'S'.$dyn_val);
-// 			$dyn_align  = ('A2'.':'.'S'.$dyn_val);
-// 			$ctot 		= ('C2'.':'.'C'.$dyn_val);
-// 			$dtot 		= ('D2'.':'.'D'.$dyn_val);
-// 			$etot 		= ('E2'.':'.'E'.$dyn_val);
-// 			$ftot 		= ('F2'.':'.'F'.$dyn_val);
-// 			$gtot 		= ('G2'.':'.'G'.$dyn_val);
-// 			$htot 		= ('H2'.':'.'H'.$dyn_val);
-// 			$itot 		= ('I2'.':'.'I'.$dyn_val);
-// 			$stot 		= ('S2'.':'.'S'.$dyn_val);
-
-// 			foreach($records as $record) {
-
-// 			$acell = ('A'.$iterator);
-// 			$bcell = ('B'.$iterator);
-// 			$ccell = ('C'.$iterator);
-// 			$dcell = ('D'.$iterator);
-// 			$ecell = ('E'.$iterator);
-// 			$fcell = ('F'.$iterator);
-// 			$gcell = ('G'.$iterator);
-// 			$hcell = ('H'.$iterator);
-// 			$icell = ('I'.$iterator);
-// 			$scell = ('S'.$iterator);
-
-// 			$sheet -> setCellValue($acell, $record -> employee_number);
-// 			$sheet -> setCellValue($bcell, $record -> employee);
-// 			$sheet -> setCellValue($ccell, $record -> gross);
-// 			$sheet -> getStyle($ccell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($dcell, $record -> sss);
-// 			$sheet -> getStyle($dcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($ecell, $record -> philhealth);
-// 			$sheet -> getStyle($ecell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($fcell, $record -> hdmf);
-// 			$sheet -> getStyle($fcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($gcell, $record -> taxinc);
-// 			$sheet -> getStyle($fcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> getStyle($bcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($hcell, $record -> withtax);
-// 			$sheet -> getStyle($hcell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($icell, $record -> npnoabs);
-// 			$sheet -> getStyle($icell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 			$sheet -> setCellValue($scell, $record -> npnoabs);
-// 			$sheet -> getStyle($scell)
-// 					       -> getNumberFormat()
-// 					       -> setFormatCode('0.00'); 
-// 		$iterator  = $iterator + 1;
-// 	}
-
-// 			$sheet -> getStyle('B'.$dyn_val2.':'.'S'.$dyn_val2) 
-// 				   -> getFont() 
-// 				   -> setBold(true);
-// 			$sheet -> getStyle('B'.$dyn_val2.':'.'S'.$dyn_val2)
-// 				   -> getNumberFormat()
-// 				   -> setFormatCode('0.00'); 
-// 			$sheet -> getStyle($dyn_border) -> applyFromArray($black -> getBlack());
-// 			$sheet -> getStyle($dyn_align) -> applyFromArray($insthin -> getInsThin());
-
-// 			$sheet -> setCellValue('B'.$dyn_val2,'Total:  ');
-// 			$sheet -> setCellvalue('C'.$dyn_val2,"= SUM($ctot)");
-// 			$sheet -> setCellvalue('D'.$dyn_val2,"= SUM($dtot)");
-// 			$sheet -> setCellvalue('E'.$dyn_val2,"= SUM($etot)");
-// 			$sheet -> setCellvalue('F'.$dyn_val2,"= SUM($ftot)");
-// 			$sheet -> setCellvalue('G'.$dyn_val2,"= SUM($gtot)");
-// 			$sheet -> setCellvalue('H'.$dyn_val2,"= SUM($htot)");
-// 			$sheet -> setCellvalue('I'.$dyn_val2,"= SUM($itot)");
-// 			$sheet -> setCellvalue('S'.$dyn_val2,"= SUM($stot)");
-
-// 				});
-
-// 			$payroll -> sheet('Payroll Notes', function($sheet) {
-
-// 			});
-
-// 		})->download($file_type);
 	}
 
 
-public function getCbcacat()
+public function getCbcacat($id)
     {
-  		$d_today = date("Y/m/d");
-  		$file_type = 'xls';
 
-  		excel::create('Employee-Data_'.$d_today, function($employee_data) {
+	    $path = (public_path().'/excels/Cbcacat_Template.xltx');
+		$workbook = new PHPExcel();
+		$workbook = PHPExcel_IOFactory::load($path);
+		$workbook -> getProperties() -> setCreator("Carlo Mendoza");
+		$workbook -> getProperties() -> setTitle("Payroll Register");	
+		$workbook -> setActiveSheetIndex(0);
 
-        	$employee_data -> sheet('Employee Data', function($sheet) {
+		$worksheet = $workbook -> getActiveSheet();
 
-          	$example_employee = tbl_user_model::orderBy('user_id', 'asc') -> get();
-          	$head = array(
-          					array('TOTAL AMOUNT:', '', '0.00'),
-          					array('TOTAL COUNT:', '', '0'),
-          					array('Account Number', 'Account Type', 'Employee Name', 'Amount')
-          				);
+		$d_today = date("Y/m/d");
+		$index = 4;
 
-  				$sheet -> fromArray($head, null, 'A1', false, false);
+		$results = db::select(
+		   	   	   db::raw("
 
-          $bottom_part = $example_employee -> count() + 4;
+		   			select 		(e.last_name || ', ' || e.first_name || '  ' ||e.middle_name) as employee,
+		   						sum(case
+									when p.entry_type = 'CR' and p.payroll_element_id = '1' then entry_amt
+									else 0
+									end) -
+								sum(case
+									when p.entry_type = 'DB' and p.payroll_element_id = '2' 
+									or   p.payroll_element_id = '4' or p.payroll_element_id = '5' then entry_amt
+									else 0
+									end) -
+								sum(case
+									when p.entry_type ='DB' and p.payroll_element_id ='12' then entry_amt
+									else 0
+									end) 
+								npnoabs
 
-          $sheet -> setFreeze('E4')
-  					     -> setWidth('A', 20)
-  					     -> setWidth('B', 20)
-  					     -> setWidth('C', 40)
-  					     -> setWidth('D', 20)
-  					     -> setHeight('3', 35)
-  					     -> setHeight($bottom_part, 25)
-  					     -> mergeCells('A'. $bottom_part .':D'. $bottom_part)
-       					 -> setBorder('A3:D'.$bottom_part, 'thin');
+			   		from		hr.tbl_employee e 
+					join		hr.tbl_company  c ON e.company_id = c.company_id 
+					join		hr.tbl_payroll  p ON e.company_id = p.company_id
 
-  				$sheet -> cells('A1:D3', function($cells) {
-  							$cells -> setFontSize(8)
-  								     -> setFontWeight('bold')
-  								     -> setFontColor('#FFFFFF')
-  								     -> setBackground('#FF0000');
-  				});
+			  		where 		    c.company_id  = '$id' 
+								and p.year_trans = '2016'
+								and e.active_flag = 'Y'
+								and e.employee_id = p.employee_id
+								and p.month_trans = '12'
+								and p.payroll_period = '1'
+								
+			  		group by    e.employee_number, employee
+			  		order by    e.employee_number
 
-  				$sheet -> cells('A3:D3', function($cells) {
-  							$cells -> setValignment('center')
-  							       -> setAlignment('center');
-  				});
+		   	   	   	")
+		   	   	   );
 
-  				$sheet -> cells('A1:D'. $bottom_part, function($cells) {
-  							$cells -> setBorder('thick', 'thick', 'thick', 'thick');
-  				});
+	$black = array(
+			'borders' => array(
+				'outline' => array(
+					'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+					'color' => array('argb' => '00000000')
+					)));
+	
+	$insthin = array(
+			'borders' => array(
+				'inside' => array(
+					'style' => PHPExcel_Style_Border::BORDER_THIN,
+					'color' => array('argb' => '00000000')
+					)));
 
-  				$sheet -> cell('A'. $bottom_part, function($cell){
-  							$cell -> setFontSize(9)
-  							      -> setFontWeight('bold')
-  							      -> setAlignment('center')
-  							      -> setValignment('center')
-  							      -> setFontColor('#FFFFFF')
-  							      -> setBackground('#FF0000')
-  							      -> setValue('***END OF FILE***');
-  				});
-          // // display values at employee columns
-          $counter = 0;
-          foreach(range(4, $example_employee -> count() + 3) as $range) {
-            $sheet -> setCellValue('C'. $range, strtoupper($example_employee -> get($counter) -> last_name . ', ' . $example_employee -> get($counter) -> first_name));
-            $counter = $counter + 1;
-          		}
-  			});
-  		}) -> download($file_type);
+	$dbcount = count($results);
+	$dyn_val = ($dbcount + 3);
+
+		foreach($results as $result) {
+
+			$acell = ('A'.$index);
+			$bcell = ('B'.$index);
+			$ccell = ('C'.$index);
+			$dcell = ('D'.$index);
+			$dtot  = ('D4'.':'.'D'.$dyn_val);	
+
+				$worksheet -> setCellValue('C2', $dbcount);
+				$worksheet -> setCellValue($ccell, $result -> employee);
+				$worksheet -> getStyle($dcell)
+					   	   -> getNumberFormat()
+					       -> setFormatCode('0.00'); 
+				$worksheet -> setCellValue($dcell, $result -> npnoabs);
+
+			$index = $index + 1;	
+
+		}
+
+			$worksheet -> getStyle('A4:D'.$dyn_val) -> applyFromArray($black);
+			$worksheet -> getStyle('A4:D'.$dyn_val) -> applyFromArray($insthin);
+			$worksheet -> getStyle('D4:D'.$dyn_val) 
+					   -> getNumberFormat()
+					   -> setFormatCode('0.00');
+
+			$worksheet -> setCellvalue('C1',"= SUM($dtot)");
+
+		$objWriter = PHPExcel_IOFactory::createWriter($workbook, 'Excel5');
+		header('Content-type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment; filename="CbcacatTemplate'.$d_today.'.xls"');
+		$objWriter -> save('php://output');
+		$workbook -> disconnectWorksheets();
+		unset($workbook);
 	}
 
 public function getPhform($id) {
+
 	
 	$path = (public_path().'/excels/Philhealth_RF1_Template.xltx');
 	$workbook = new PHPExcel();
@@ -790,9 +485,6 @@ public function getPhform($id) {
 	$workbook -> getActiveSheet() -> getPageSetup() -> setFitToHeight(0);
 
 	$dataws = $workbook -> getSheet(0);
-
-	
-	// $file_type = 'xls';
 
 	$dataws -> getColumnDimension('A') -> setWidth(12.71);
 	$dataws -> getColumnDimension('B') -> setWidth(25.71);
@@ -889,15 +581,40 @@ public function getPhform($id) {
 				-> setCellValue('G4', $data_company -> last_name.', '. $data_company -> first_name);
 	}
 //Styles
-	$la = new Styles;
-	$vhcenter = new Styles;
+	$leftAlign = array(
+			'alignment' => array(
+				'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_LEFT,
+				'vertical' 	 => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+				));	
+
+	$vhcenter =  array(
+			'alignment' => array(
+				'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+				'vertical'   => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+				));
+
+	$black = array(
+			'borders' => array(
+				'outline' => array(
+					'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+					'color' => array('argb' => '00000000')
+					)));
+
+	$insthin = array(
+			'borders' => array(
+				'inside' => array(
+					'style' => PHPExcel_Style_Border::BORDER_THIN,
+					'color' => array('argb' => '00000000')
+					)));
+	
+	
 
 	$dataws -> getStyle('N1:N6') -> getNumberFormat()
 						   		 -> setFormatCode('0.00'); 
-	$dataws -> getStyle('B1:B2') -> applyFromArray($la -> leftAlign());
-	$dataws -> getStyle('B3:B5') -> applyFromArray($la -> leftAlign());
-	$dataws -> getStyle('E2:E7') -> applyFromArray($vhcenter -> getVertHoriCenter());
-	$dataws -> getStyle('N1:N6') -> applyFromArray($vhcenter -> getVertHoriCenter());
+	$dataws -> getStyle('B1:B2') -> applyFromArray($leftAlign);
+	$dataws -> getStyle('B3:B5') -> applyFromArray($leftAlign);
+	$dataws -> getStyle('E2:E7') -> applyFromArray($vhcenter);
+	$dataws -> getStyle('N1:N6') -> applyFromArray($vhcenter);
 
 // EMPLOYEE QUERY
 	$data_employees = db::select(
@@ -1001,10 +718,10 @@ public function getPhform($id) {
 								 		   -> getStartColor()
 								 		   -> setRGB('F0E68C');
 								 		   								 		   
-	$dataws -> getStyle('A9:A'.$dyn_range) -> applyFromArray($vhcenter -> getVertHoriCenter());
-	$dataws -> getStyle('C9:C'.$dyn_range) -> applyFromArray($vhcenter -> getVertHoriCenter());
-	$dataws -> getStyle('F9:H'.$dyn_range) -> applyFromArray($vhcenter -> getVertHoriCenter());
-	$dataws -> getStyle('O9:O'.$dyn_range) -> applyFromArray($vhcenter -> getVertHoriCenter());
+	$dataws -> getStyle('A9:A'.$dyn_range) -> applyFromArray($vhcenter);
+	$dataws -> getStyle('C9:C'.$dyn_range) -> applyFromArray($vhcenter);
+	$dataws -> getStyle('F9:H'.$dyn_range) -> applyFromArray($vhcenter);
+	$dataws -> getStyle('O9:O'.$dyn_range) -> applyFromArray($vhcenter);
 	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($black -> getBlack());
 	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($insthin -> getInsThin());
 
