@@ -81,7 +81,7 @@ return [
         'pgsql' => [
             'driver' => 'pgsql',
            // 'host' => '192.168.1.20',
-            'host' => '127.0.0.1',
+            'host' => '168.1.76.212',
             'port' => '5434',
             'database' => 'nuvemhr',
             'username' => 'nuvemhr',

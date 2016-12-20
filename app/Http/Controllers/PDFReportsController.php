@@ -1,6 +1,10 @@
 <?php
 
-/*@author Carlo Mendoza*/
+/*@author 
+ *
+Carlo Mendoza
+ *
+ */
 
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Input;
@@ -275,7 +279,3 @@ class PDFReportsController
 		return $new_pdf -> Output();
 	}
 }
-
-
-
-
