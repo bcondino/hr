@@ -57,6 +57,9 @@ Route::group(['middleware' => ['auth']], function () {
 	Route::get('payrollmanagement/repdetail', 'PayrollManagementController@repdetail');
 	Route::get('payrollmanagement/repparam', 'PayrollManagementController@repparam');
 	/* 20161028 end of addition */
+	Route::get('payrollmanagement/nonRecurringPayrollMode', 'PayrollManagementController@nonRecurringPayrollMode');
+	Route::get('payrollmanagement/nonRecurringYear', 'PayrollManagementController@nonRecurringYear');
+	Route::get('payrollmanagement/nonRecurringPayPeriod', 'PayrollManagementController@nonRecurringPayPeriod');
 	Route::get('payrollmanagement/payrollperiod', 'PayrollManagementController@payrollperiod');
 
 	Route::controller('wiz2', 'Wiz2Controller');

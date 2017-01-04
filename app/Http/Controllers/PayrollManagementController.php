@@ -34,6 +34,72 @@ class PayrollManagementController extends Controller {
 		return $payroll_elements;
 	}
 
+	public function nonRecurringPayrollMode() {
+		$employee_id = Input::get('employee_id');
+
+		$payroll_modes = DB::table('hr.tbl_employee')
+			->join('hr.tbl_payroll_group', function ($join) {
+				$join->on('hr.tbl_employee.payroll_group_id', '=', 'hr.tbl_payroll_group.payroll_group_id')
+					->on('hr.tbl_employee.company_id', '=', 'hr.tbl_payroll_group.company_id');
+			})
+			->join('hr.tbl_payroll_mode', function ($join) {
+				$join->on('hr.tbl_payroll_group.payroll_mode', '=', 'hr.tbl_payroll_mode.payroll_mode')
+					->on('hr.tbl_payroll_group.company_id', '=', 'hr.tbl_payroll_mode.company_id');
+			})
+			->select('hr.tbl_payroll_mode.payroll_mode_id', 'hr.tbl_payroll_mode.description')
+			->where('hr.tbl_employee.employee_id', '=', $employee_id)
+			->where('hr.tbl_employee.active_flag', '=', 'Y')
+			->where('hr.tbl_employee.company_id', '=', $this->currentCompany->company_id)
+			->get();
+
+		return $payroll_modes;
+
+	}
+
+	public function nonRecurringYear() {
+		$employee_id = Input::get('employee_id');
+
+		$payroll_years = DB::table('hr.tbl_employee')
+			->join('hr.tbl_payroll_group', function ($join) {
+				$join->on('hr.tbl_employee.payroll_group_id', '=', 'hr.tbl_payroll_group.payroll_group_id')
+					->on('hr.tbl_employee.company_id', '=', 'hr.tbl_payroll_group.company_id');
+			})
+			->join('hr.tbl_payroll_mode', function ($join) {
+				$join->on('hr.tbl_payroll_group.payroll_mode', '=', 'hr.tbl_payroll_mode.payroll_mode')
+					->on('hr.tbl_payroll_group.company_id', '=', 'hr.tbl_payroll_mode.company_id');
+			})
+			->join('hr.tbl_payroll_period', function ($join) {
+				$join->on('hr.tbl_payroll_mode.company_id', '=', 'hr.tbl_payroll_period.company_id')
+					->on('hr.tbl_payroll_mode.payroll_mode', '=', 'hr.tbl_payroll_period.payroll_mode');
+			})
+			->select('hr.tbl_payroll_period.year')
+			->where('hr.tbl_employee.employee_id', '=', $employee_id)
+			->where('hr.tbl_employee.active_flag', '=', 'Y')
+			->where('hr.tbl_employee.company_id', '=', $this->currentCompany->company_id)
+			->distinct()
+			->get();
+
+		return $payroll_years;
+	}
+
+	public function nonRecurringPayPeriod() {
+		$payroll_mode_id = Input::get('payroll_mode_id');
+		$year = empty(Input::get('year')) ? null : Input::get('year');
+
+		$payroll_periods = DB::table('hr.tbl_payroll_period')
+			->join('hr.tbl_payroll_mode', function ($join) {
+				$join->on('hr.tbl_payroll_period.payroll_mode', '=', 'hr.tbl_payroll_mode.payroll_mode')
+					->on('hr.tbl_payroll_period.company_id', '=', 'hr.tbl_payroll_mode.company_id');
+			})
+			->select('hr.tbl_payroll_period.payroll_period_id', 'hr.tbl_payroll_period.date_from', 'hr.tbl_payroll_period.date_to')
+			->where('hr.tbl_payroll_period.company_id', '=', $this->currentCompany->company_id)
+			->where('hr.tbl_payroll_mode.payroll_mode_id', '=', $payroll_mode_id)
+			->where('year', '=', $year)
+			->get();
+
+		return $payroll_periods;
+	}
+
 	public function repdetail() {
 		$report_id = Input::get('report_id');
 		$report_details = tbl_report_model::
@@ -310,14 +376,32 @@ class PayrollManagementController extends Controller {
 	}
 
 	public function getNonrearningsdedn() {
-		$nonrearningsdedn = tbl_payroll_earndedn_model::
-			where('active_flag', 'Y')
+		$nonrearningsdedn = DB::table('hr.tbl_payroll_earndedn')
+			->join('hr.tbl_employee', 'hr.tbl_payroll_earndedn.employee_id', '=', 'hr.tbl_employee.employee_id')
+			->join('hr.tbl_payroll_element', 'hr.tbl_payroll_earndedn.payroll_element_id', '=', 'hr.tbl_payroll_element.payroll_element_id')
+			->join('hr.tbl_payroll_period', function ($join) {
+				$join->on('hr.tbl_payroll_earndedn.date_from', '=', 'hr.tbl_payroll_period.date_from')
+					->on('hr.tbl_payroll_earndedn.date_to', '=', 'hr.tbl_payroll_period.date_to')
+					->on('hr.tbl_payroll_earndedn.date_from', '=', 'hr.tbl_payroll_period.date_from')
+					->on('hr.tbl_employee.company_id', '=', 'hr.tbl_payroll_period.company_id');
+			})
+			->join('hr.tbl_payroll_mode', function ($join) {
+				$join->on('hr.tbl_payroll_period.payroll_mode', '=', 'hr.tbl_payroll_mode.payroll_mode')
+					->on('hr.tbl_payroll_period.company_id', '=', 'hr.tbl_payroll_mode.company_id');
+			})
+			->select('hr.tbl_payroll_earndedn.payroll_earndedn_id'
+					,'hr.tbl_employee.first_name'
+					,'hr.tbl_employee.last_name'
+					,'hr.tbl_employee.employee_number'
+					,'hr.tbl_payroll_element.entry_type'
+					,'hr.tbl_payroll_element.description as element_name'
+					,'hr.tbl_payroll_mode.description as payroll_mode'
+					,'hr.tbl_payroll_earndedn.amount'
+					,'hr.tbl_payroll_period.date_from'
+					,'hr.tbl_payroll_period.date_to')
+			->where('hr.tbl_employee.company_id', '=', $this->currentCompany->company_id)
 			->get();
-		$payroll_mode = tbl_payroll_mode_model::
-			where('active_flag', 'Y')
-			->where('company_id', $this->currentCompany->company_id)
-			->lists('payroll_mode', 'payroll_mode')
-			->toArray();
+
 		$employee = \App\tbl_employee_model::select(
 			DB::raw("first_name || ' ' || last_name || ' (' || employee_number || ')' as employee, employee_id"))
 			->where('active_flag', 'Y')
@@ -332,15 +416,26 @@ class PayrollManagementController extends Controller {
 		return view('main.payrollmanagement.nonrearningsdedn',
 			['nonrearningsdedn' => $nonrearningsdedn,
 				'employee' => $employee,
-				'payroll_mode' => $payroll_mode,
 				'payroll_element' => $payroll_element]);
 	}
 
 	public function postNonrearningsdedn(Request $request) {
 		$post_nonrearningsdedn_rule = [
-			'employee_id' => 'required'];
+			'employee_id' => 'required',
+			'payroll_element_id' => 'required',
+			'payroll_year' => 'required',
+			'payroll_mode_id' => 'required',
+			'payroll_period_id' => 'required',
+			'amount' => 'required',
+			'special_run_flag' => 'required'];
 		$post_nonrearningsdedn_msg = [
-			'employee_id.required' => 'Employee number is a required field.'];
+			'employee_id.required' => 'Employee number is a required field.',
+			'payroll_element_id.required' => 'Payroll detail is required.',
+			'payroll_year.required' => 'Year is required.',
+			'payroll_mode_id.required' => 'Payroll mode is required.',
+			'payroll_period_id.required' => 'Payroll period is required.',
+			'amount.required' => 'Amount is required.',
+			'special_run_flag.required' => 'Please specify if for special run.'];
 		$validator = Validator::make($request->all(), $post_nonrearningsdedn_rule, $post_nonrearningsdedn_msg);
 		if ($validator->fails()) {
 			Session::flash('add-failed', 'Failed to add input details!');

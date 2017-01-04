@@ -59,12 +59,16 @@
 						@foreach($nonrearningsdedn as $nonrearningdedn)
 							<tr>
 					            <td> <input type="checkbox" id="select_all" class="chk-nonrearningdedn" name="nonrearningdedn[]" value="{{ $nonrearningdedn->payroll_earndedn_id }}"/></td>
-								<td> {{ $nonrearningdedn->employee_id }}</td>
-								<td> {{ $nonrearningdedn->payroll_element_id }}</td>
-								<td> {{ $nonrearningdedn->payroll_element_id}}</td>
-								<td> {{ $nonrearningdedn->payroll_mode_id }}</td>
+								<td> {{ $nonrearningdedn->first_name.' '.$nonrearningdedn->last_name.' ('.$nonrearningdedn->employee_number.')'}}</td>
+								@if ($nonrearningdedn->entry_type == 'CR')
+									<td> Credit </td>
+								@elseif ($nonrearningdedn->entry_type == 'DB')
+									<td> Debit </td>
+								@endif
+								<td> {{ $nonrearningdedn->element_name }} </td>
+								<td> {{ $nonrearningdedn->payroll_mode }} </td>
 								<td> {{ $nonrearningdedn->amount }} </td>
-								<td> {{ $nonrearningdedn->payroll_period_id }} </td>								
+								<td> {{ $nonrearningdedn->date_from.' to '.$nonrearningdedn->date_to }} </td>								
 							</tr>
 						@endforeach
 					</tbody>
@@ -79,6 +83,17 @@
     <div class="uk-modal-dialog modal-wide">
     	<button class="uk-modal-close uk-close"></button>
     	<div class="uk-modal-header"><span class="uk-icon-plus-circle"></span>Add Non-recurring Deduction</div>
+
+    	@if(Session::has('add-failed'))
+			@if($errors->has())
+				<div class="uk-alert uk-alert-danger ">
+					@foreach ($errors->all() as $error)
+						<p class="uk-text-left"> <span class="uk-icon-close"></span> {{ $error }} </p>
+					@endforeach
+				</div>
+			@endif
+		@endif
+
         <form class="uk-form uk-form-horizontal" action="nonrearningsdedn" method="post">
         	{{ csrf_field() }}
         	<div class="uk-grid">
@@ -90,7 +105,7 @@
 				        		{{ Form::select('employee_id'
 				        			, [null => '-- Select --'] + $employee
  				        			, old('employee_id')
-				        			, ['class' => 'form-control']) }}
+				        			, ['class' => 'form-control', 'id' => 'employee_id']) }}
 				        	</div>
 				        </div>
 				        <div class="uk-form-row">
@@ -113,7 +128,7 @@
 				        <div class="uk-form-row">
 				        	<label class="uk-form-label">Year</label>
 				        	<div class="uk-form-controls">
-				        		<select class="form-control" name="year" id="year">
+				        		<select class="form-control" name="payroll_year" id="payroll_year">
 				        			<option value=""> -- Select -- </option>
 				        		</select>
 				        	</div>
@@ -121,7 +136,9 @@
 				        <div class="uk-form-row">
 				        	<label class="uk-form-label">Payroll Mode</label>
 				        	<div class="uk-form-controls">
-				        		<input type="text" class="form-control" placeholder="" name="amount" value="{{ old('amount') }}">
+				        		<select class="form-control" name="payroll_mode_id" id="payroll_mode_id">
+				        			<option value=""> -- Select -- </option>
+				        		</select>
 				        	</div>
 				        </div>
 				    </div>
@@ -129,8 +146,9 @@
 					<div class="uk-form-row">
 						<label class="uk-form-label">Payroll Period</label>
 						<div class="uk-form-controls date-calendar" data-uk-form-select>
-							<span class="uk-icon-calendar"></span>
-							<input class="form-control" type="text" data-uk-datepicker="{format:'MM/DD/YYYY'}" name="date_start" value="{{ old('date_start') }}">
+							<select class="form-control" name="payroll_period_id" id="payroll_period_id">
+				        		<option value=""> -- Select -- </option>
+				        	</select>
 						</div>
 					</div>
 					<div class="uk-form-row">
@@ -142,7 +160,7 @@
 					<div class="uk-form-row">
 						<label class="uk-form-label">For Special Run</label>
 						<div class="uk-form-controls">
-							{{ Form::select('status'
+							{{ Form::select('special_run_flag'
 								, [null => '-- Select --', 'Y' => 'Yes', 'N' => 'No']
 								, old('status')
 								, ['class' => 'form-control']) }}
@@ -195,6 +213,55 @@
 						"<option value=" + 
 							payroll_element.payroll_element_id +"> " +
 							payroll_element.description + "</option>");			
+					});
+				});
+			});
+
+			$("#employee_id").on('change', function(e){
+				var employee_id = e.target.value;
+
+				$.get('nonRecurringPayrollMode?employee_id=' + employee_id, function(data) {
+					$('#payroll_mode_id').empty();
+					$('#payroll_mode_id').append("<option value=''> -- Select -- </option>");
+					$.each(data, function(index, payroll_mode){
+						$('#payroll_mode_id').append("<option value=" + payroll_mode.payroll_mode_id + "> " + payroll_mode.description + "</option>");
+					});
+				});
+
+				$.get('nonRecurringYear?employee_id=' + employee_id, function(data) {
+					$('#payroll_year').empty();
+					$('#payroll_year').append("<option value=''> -- Select -- </option>");
+					$.each(data, function(index, payroll_year){
+						$('#payroll_year').append("<option value=" + payroll_year.year + "> " + payroll_year.year + "</option>");
+					});
+				});
+
+			});
+
+			$("#payroll_year").on('change', function (e) {
+				var payroll_mode_id = $('#payroll_mode_id').val();
+				var year = e.target.value;
+
+				$.get('nonRecurringPayPeriod?payroll_mode_id=' + payroll_mode_id + '&year=' + year, function (data) {
+					$('#payroll_period_id').empty();
+					$('#payroll_period_id').append("<option value=''> -- Select -- </option>");
+					$.each(data, function(index, payroll_period) {
+						$('#payroll_period_id').append("<option value=" + payroll_period.payroll_period_id + "> " + 
+							payroll_period.date_from + " to " + payroll_period.date_to + "</option>");
+					});
+				});
+			});
+
+			$("#payroll_mode_id").on('change', function (e) {
+				var payroll_mode_id = e.target.value;
+				var year = $('#payroll_year').val();
+
+				$.get('nonRecurringPayPeriod?payroll_mode_id=' + payroll_mode_id + '&year=' + year, function (data) {
+					$('#payroll_period_id').empty();
+					$('#payroll_period_id').append("<option value=''> -- Select -- </option>");
+					$.each(data, function(index, payroll_period) {
+						$('#payroll_period_id').append("<option value=" + payroll_period.payroll_period_id + "> " + 
+							payroll_period.date_from + " to " + payroll_period.date_to + "</option>");
 					});
 				});
 			});
