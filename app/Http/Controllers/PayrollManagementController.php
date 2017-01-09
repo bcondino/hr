@@ -390,6 +390,10 @@ class PayrollManagementController extends Controller {
 					->on('hr.tbl_payroll_period.company_id', '=', 'hr.tbl_payroll_mode.company_id');
 			})
 			->select('hr.tbl_payroll_earndedn.payroll_earndedn_id'
+					,'hr.tbl_payroll_earndedn.employee_id'
+					,'hr.tbl_payroll_element.payroll_element_id'
+					,'hr.tbl_payroll_period.payroll_period_id'
+					,'hr.tbl_payroll_mode.payroll_mode_id'
 					,'hr.tbl_employee.first_name'
 					,'hr.tbl_employee.last_name'
 					,'hr.tbl_employee.employee_number'
@@ -398,8 +402,11 @@ class PayrollManagementController extends Controller {
 					,'hr.tbl_payroll_mode.description as payroll_mode'
 					,'hr.tbl_payroll_earndedn.amount'
 					,'hr.tbl_payroll_period.date_from'
-					,'hr.tbl_payroll_period.date_to')
+					,'hr.tbl_payroll_period.date_to'
+					,'hr.tbl_payroll_period.year'
+					,'hr.tbl_payroll_earndedn.special_run_flag')
 			->where('hr.tbl_employee.company_id', '=', $this->currentCompany->company_id)
+			->where('hr.tbl_payroll_earndedn.active_flag', '=', 'Y')
 			->get();
 
 		$employee = \App\tbl_employee_model::select(
@@ -411,8 +418,7 @@ class PayrollManagementController extends Controller {
 		$payroll_element = \App\tbl_payroll_element_model::
 			where('company_id', $this->currentCompany->company_id)
 			->where('active_flag', 'Y')
-			->lists('payroll_element_id', 'description')
-			->toArray();
+			->get();
 		return view('main.payrollmanagement.nonrearningsdedn',
 			['nonrearningsdedn' => $nonrearningsdedn,
 				'employee' => $employee,
@@ -452,13 +458,67 @@ class PayrollManagementController extends Controller {
 				, 'date_to' => $date_to
 				, 'amount' => empty($request->amount) ? 0 : $request->amount
 				, 'special_run_flag' => $request->special_run_flag
-				, 'payment_ctr' => empty($request->payment_ctr) ? 0 : $request->payment_ctr
 				, 'created_by' => $this->currentUser->user_id
 				, 'updated_by' => $this->currentUser->user_id,
 			]);
-			Session::flash('add-success', 'New non recurring earnings and deductions has been added successfully.');
+			Session::flash('add-success', 'New entry has been added successfully.');
 			return redirect()->back();
 		}
+	}
+
+	public function putNonrearningsdedn(Request $request) 
+	{
+		$post_nonrearningsdedn_rule = [
+			'payroll_element_id' => 'required',
+			'payroll_year' => 'required',
+			'payroll_mode_id' => 'required',
+			'payroll_period_id' => 'required',
+			'amount' => 'required',
+			'special_run_flag' => 'required'];
+		$post_nonrearningsdedn_msg = [
+			'payroll_element_id.required' => 'Payroll detail is required.',
+			'payroll_year.required' => 'Year is required.',
+			'payroll_mode_id.required' => 'Payroll mode is required.',
+			'payroll_period_id.required' => 'Payroll period is required.',
+			'amount.required' => 'Amount is required.',
+			'special_run_flag.required' => 'Please specify if for special run.'];
+		$validator = Validator::make($request->all(), $post_nonrearningsdedn_rule, $post_nonrearningsdedn_msg);
+		if ($validator->fails()) {
+			Session::flash('add-failed', 'Failed to add input details!');
+			return redirect()->back()->withErrors($validator)->withInput();
+		} else {
+
+			$date_from = tbl_payroll_period_model::find($request->payroll_period_id)->date_from;
+			$date_to = tbl_payroll_period_model::find($request->payroll_period_id)->date_to;
+
+			tbl_payroll_earndedn_model::where('payroll_earndedn_id', $request->payroll_earndedn_id)->update(
+				['payroll_element_id' => $request->payroll_element_id
+				,'date_from' => $date_from
+				,'date_to' => $date_to
+				,'amount' => empty($request->amount) ? 0 : $request->amount
+				,'special_run_flag' => $request->special_run_flag
+				,'updated_by' => $this->currentUser->user_id]
+			);
+
+			Session::flash('edit-success', 'Selected entry has been updated successfully.');
+			return redirect()->back();
+		}
+	}
+
+	public function deleteNonrearningsdedn(Request $request)
+	{
+		if (count($request->nonrearningdedns) > 0) {
+			foreach ($request->nonrearningdedns as $nonrearningdedn) {
+				tbl_payroll_earndedn_model::find($nonrearningdedn)->update(
+					['active_flag' => 'N'
+					,'updated_by' => $this->currentUser->user_id]
+				);
+			}
+			Session::flash('del-success', 'Records selected have been deleted successfully.');
+		} else {
+			Session::flash('del-warning', 'No selected records found! Nothing to delete.');
+		}
+		return redirect()->back();
 	}
 
 	public function getPayrollprocess() {
