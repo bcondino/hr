@@ -42,8 +42,6 @@ class ExcelReportsController extends Controller
 	$worksheet  -> getColumnDimension('K') -> setWidth(14);		  
 
 	$d_today = date("Y/m/d");
-	$index = 6;
-
 	$results = db::select(
 			   db::raw("
 							select      c.company_name,
@@ -85,10 +83,11 @@ class ExcelReportsController extends Controller
 								")
 							);
 
+	$index = 6;
 	$dbcount = count($results);
 
 	foreach ($results as $result) {
-//EXCEL POSITION					
+//EXCEL SELECTOR					
 		$acell = ('A'.$index);
 		$ccell = ('C'.$index);
 		$dcell = ('D'.$index);
@@ -105,7 +104,7 @@ class ExcelReportsController extends Controller
 				   -> setCellValue($dcell, $result -> last_name)
 				   -> setCellValue($ecell, $result -> first_name)
 				   -> setCellValue($gcell, $result -> middle_name)
-				   -> setCellValue($hcell, $result -> date_from.'  -  '.$result -> date_to)
+				   -> setCellValue($hcell, $result -> date_from.'  /  '.$result -> date_to)
 				   -> setCellValue($icell, $result -> emp_share)
 				   -> setCellValue($jcell, $result -> comp_share);
 		$worksheet -> getStyle($icell)
@@ -116,7 +115,7 @@ class ExcelReportsController extends Controller
 				   -> setFormatCode('0.00'); 
 //ITERATOR				
 	$index = $index + 1; 
-			}
+	}
 
 		$dyn_val 	= ($dbcount + 5);
 		$dyn_header = ('A5'.':'.'K'.$dyn_val);
@@ -161,7 +160,7 @@ class ExcelReportsController extends Controller
 	$objWriter -> save('php://output');
 	$workbook -> disconnectWorksheets();
 	unset($workbook);
-	
+
 }
 
 	public function getPayroll($id) {
@@ -485,7 +484,6 @@ public function getPhform($id) {
 	$workbook -> getActiveSheet() -> getPageSetup() -> setFitToHeight(0);
 
 	$dataws = $workbook -> getSheet(0);
-
 	$dataws -> getColumnDimension('A') -> setWidth(12.71);
 	$dataws -> getColumnDimension('B') -> setWidth(25.71);
 	$dataws -> getColumnDimension('C') -> setWidth(13.71);
@@ -503,6 +501,7 @@ public function getPhform($id) {
 	$dataws -> getColumnDimension('O') -> setWidth(25.71);
 	$dataws -> getColumnDimension('P') -> setWidth(15.71);
 
+
 	$dataws -> getStyle('E4:E7') -> getFill()
 								 		    -> setFillType(PHPExcel_Style_Fill::FILL_SOLID)
 								 		    -> getStartColor()
@@ -511,75 +510,6 @@ public function getPhform($id) {
 								 		    -> setFillType(PHPExcel_Style_Fill::FILL_SOLID)
 								 		    -> getStartColor()
 								 		    -> setRGB('F0E68C');							 		    
-
-
-// COMPANY QUERY
-	$data_companies = db::select(
-					db::raw("
-						select 
-								c.company_name,
-								c.address,
-								c.city,
-								c.contact_no,
-								p.year_trans,
-								p.month_trans,
-								c.sss_no,
-								c.tin_no,
-								u.first_name,
-								u.last_name,
-								sum(case 
-									when p.entry_type = 'DB' and p.payroll_element_id = '5' then entry_amt
-									else 0
-									end
-								)totalps,
-								sum(case
-									when p.entry_type = 'EE' and p.payroll_element_id = '11' then entry_amt
-									else 0
-									end
-								)totales
-
-						from 	hr.tbl_employee e 
-						join 	hr.tbl_company c on e.company_id = c.company_id
-						join 	hr.tbl_payroll p on e.company_id = p.company_id
-						join 	hr.tbl_user u    on u.user_id = p.created_by 	 	--for COMPANY DETAILS only!!			
-						where 		c.company_id = '$id'
-								and e.active_flag = 'Y' 
-								and e.company_id  = c.company_id 
-								and e.employee_id = p.employee_id
-						group by 
-								c.company_name,
-								c.address,
-								c.city,
-								c.contact_no,
-								p.year_trans,
-								p.month_trans,
-								c.sss_no,
-								c.tin_no,
-								u.first_name,
-								u.last_name
-						       ")
-					        );
-
-	$t_stamp = date("h:i:sa");
-	$d_today = date("Y/m/d");
-
-	$dbcount = count($data_companies);
-
-	
-	foreach($data_companies as $data_company) {
-
-		$dataws -> setCellValue('B1', $data_company -> company_name)
-				-> setCellvalue('B2', $data_company -> address.', '.$data_company -> city)
-				-> setCellvalue('B4', $data_company -> contact_no)
-				-> setCellvalue('E2', $dbcount)
-				-> setCellvalue('E3', 'PRIVATE')
-				-> setCellvalue('E4', $data_company -> year_trans)
-				-> setCellvalue('E5', $data_company -> month_trans)
-				-> setCellvalue('E7', $d_today.' '.$t_stamp)
-				-> setCellvalue('G1', $data_company -> sss_no)
-				-> setCellvalue('G2', $data_company -> tin_no)
-				-> setCellValue('G4', $data_company -> last_name.', '. $data_company -> first_name);
-	}
 //Styles
 	$leftAlign = array(
 			'alignment' => array(
@@ -606,8 +536,107 @@ public function getPhform($id) {
 					'style' => PHPExcel_Style_Border::BORDER_THIN,
 					'color' => array('argb' => '00000000')
 					)));
+
+	$ft8wraptrue = array(
+			'alignment' => array(
+				'wrap' => true,
+				),
+			'font' => array(
+				'size' => 8,
+				'bold' => true
+				));
+
+	$rightAlign = array(
+			'alignment' => array(
+				'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_RIGHT,
+				'vertical' 	 => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+				));	
 	
-	
+	$white = array(
+			'borders' => array(
+				'inside' => array(
+					'style' => PHPExcel_Style_Border::BORDER_THIN,
+					'color' => array('argb' => '00FFFFFF',),
+					)));
+
+	$footer = array(
+			'borders' => array(
+				'right' => array(
+					'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+					'color' => array('argb' => '00000000')
+					),
+				'bottom' => array(
+					'style' => PHPExcel_Style_Border::BORDER_MEDIUM,
+					'color' => array('argb' => '00000000')
+					)));
+
+// COMPANY QUERY
+	$data_companies =   db::select(
+    					db::raw("
+						select 
+								c.company_name,
+								c.address,
+								c.city,
+								c.contact_no,
+								p.year_trans,
+								p.month_trans,
+								c.sss_no,
+								c.tin_no,
+								u.first_name,
+								u.last_name,
+								sum(case 
+									when p.entry_type = 'DB' 
+									and  p.payroll_element_id = '5' 
+									then entry_amt
+								else 0
+								end
+								)totalps,
+								sum(case
+									when p.entry_type = 'EE' 
+									and p.payroll_element_id = '11' 
+									then entry_amt
+								else 0
+								end
+								)totales
+
+						from 	hr.tbl_employee e 
+						join 	hr.tbl_company c on e.company_id = c.company_id
+						join 	hr.tbl_payroll p on e.company_id = p.company_id
+						join 	hr.tbl_user u    on u.user_id = p.created_by --for COMPANY DETAILS only!!			
+						where 		c.company_id = '$id'
+								and e.active_flag = 'Y' 
+								and e.company_id  = c.company_id 
+								and e.employee_id = p.employee_id
+						group by 
+								c.company_name,
+								c.address,
+								c.city,
+								c.contact_no,
+								p.year_trans,
+								p.month_trans,
+								c.sss_no,
+								c.tin_no,
+								u.first_name,
+								u.last_name
+						       ")
+					        );
+
+	$t_stamp = date("h:i:sa");
+	$d_today = date("Y/m/d");
+
+	foreach($data_companies as $data_company) {
+
+		$dataws -> setCellValue('B1', $data_company -> company_name)
+				-> setCellvalue('B2', $data_company -> address.', '.$data_company -> city)
+				-> setCellvalue('B4', $data_company -> contact_no)
+				-> setCellvalue('E3', 'PRIVATE')
+				-> setCellvalue('E4', $data_company -> year_trans)
+				-> setCellvalue('E5', $data_company -> month_trans)
+				-> setCellvalue('E7', $d_today.' '.$t_stamp)
+				-> setCellvalue('G1', $data_company -> sss_no)
+				-> setCellvalue('G2', $data_company -> tin_no)
+				-> setCellValue('G4', $data_company -> last_name.', '. $data_company -> first_name);
+	}			
 
 	$dataws -> getStyle('N1:N6') -> getNumberFormat()
 						   		 -> setFormatCode('0.00'); 
@@ -631,22 +660,26 @@ public function getPhform($id) {
 								TO_CHAR(p.date_to,'MM-DD-YYYY')as date_to,
 								sum(case 
 									when p.entry_type = 'CR' and p.payroll_element_id = '1' 
-									and e.employee_id = p.employee_id then entry_amt
-									else 0
-									end
+									and e.employee_id = p.employee_id 
+									then entry_amt
+								else 0
+								end
 								)basic,
 								sum(case
 									when p.entry_type = 'DB' and p.payroll_element_id = '5' 
-									and e.employee_id = p.employee_id then entry_amt
-									else 0
-										end
+									and e.employee_id = p.employee_id 
+									then entry_amt
+								else 0
+								end
 								)e_share,
 								sum(case
 									when p.entry_type = 'EE' and p.payroll_element_id = '11'
-									and e.employee_id = p.employee_id  then entry_amt
-									else 0
-									end
+									and e.employee_id = p.employee_id  
+									then entry_amt
+								else 0
+								end
 								)c_share
+
 							from 	hr.tbl_employee e 
 							join 	hr.tbl_company c on e.company_id = c.company_id
 							join 	hr.tbl_payroll p on e.company_id = p.company_id
@@ -667,27 +700,29 @@ public function getPhform($id) {
 						);
 //data_employees iterator
 	$deiterator = 9;
+	$db_count = count($data_employees);
 	$de_count = (count($data_employees) - 1);
 	$dyn_range = $de_count + $deiterator;
-	foreach($data_employees as $data_employee) {
 
-	$acell = ('A'.$deiterator);
-	$bcell = ('B'.$deiterator);
-	$ccell = ('C'.$deiterator);
-	$dcell = ('D'.$deiterator);
-	$ecell = ('E'.$deiterator);
-	$fcell = ('F'.$deiterator);
-	$gcell = ('G'.$deiterator);
-	$hcell = ('H'.$deiterator);
-	$icell = ('I'.$deiterator);
-	$jcell = ('J'.$deiterator);
-	$kcell = ('K'.$deiterator);
-	$lcell = ('L'.$deiterator);
-	$mcell = ('M'.$deiterator);
-	$ncell = ('N'.$deiterator);
-	$ocell = ('O'.$deiterator);
+		foreach($data_employees as $data_employee) {
 
-		$dataws -> setCellValue($acell, $data_employee -> employee_number)
+			$acell = ('A'.$deiterator);
+			$bcell = ('B'.$deiterator);
+			$ccell = ('C'.$deiterator);
+			$dcell = ('D'.$deiterator);
+			$ecell = ('E'.$deiterator);
+			$fcell = ('F'.$deiterator);
+			$gcell = ('G'.$deiterator);
+			$hcell = ('H'.$deiterator);
+			$icell = ('I'.$deiterator);
+			$jcell = ('J'.$deiterator);
+			$kcell = ('K'.$deiterator);
+			$lcell = ('L'.$deiterator);
+			$mcell = ('M'.$deiterator);
+			$ncell = ('N'.$deiterator);
+			$ocell = ('O'.$deiterator);
+
+		$dataws	-> setCellValue($acell, $data_employee -> employee_number)
 				-> setCellvalue($bcell, $data_employee -> last_name)
 				-> setCellvalue($dcell, $data_employee -> first_name)
 				-> setCellvalue($ecell, $data_employee -> middle_name)
@@ -702,8 +737,12 @@ public function getPhform($id) {
 	$deiterator	= $deiterator + 1;			
 	}
 
-	$black = new Styles;
-	$insthin = new Styles;
+	$dataps = ('K1:K'.$dyn_range);
+	$dataes = ('L1:L'.$dyn_range);
+
+	$dataws -> setCellValue('E2', $db_count);
+	$dataws -> setCellValue('N1', "= SUM($dataps)");
+	$dataws -> setCellValue('N2', "= SUM($dataes)");
 
 	$dataws -> getStyle('I9:I'.$dyn_range) -> getNumberFormat()
 						   				   -> setFormatCode('0.00'); 
@@ -722,12 +761,11 @@ public function getPhform($id) {
 	$dataws -> getStyle('C9:C'.$dyn_range) -> applyFromArray($vhcenter);
 	$dataws -> getStyle('F9:H'.$dyn_range) -> applyFromArray($vhcenter);
 	$dataws -> getStyle('O9:O'.$dyn_range) -> applyFromArray($vhcenter);
-	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($black -> getBlack());
-	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($insthin -> getInsThin());
+	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($black);
+	$dataws -> getStyle('A9:O'.$dyn_range) -> applyFromArray($insthin);
 
 //3rd sheet
 	$rfws = $workbook -> getSheet(2);
-
 	$rfws -> getColumnDimension('A') -> setWidth(10.71);
 	$rfws -> getColumnDimension('B') -> setWidth(0.25);
 	$rfws -> getColumnDimension('C') -> setWidth(1.71);
@@ -766,8 +804,6 @@ public function getPhform($id) {
 	$rfws -> getRowDimension('8') -> setRowHeight(34.50);
 	$rfws -> getRowDimension('9') -> setRowHeight(61.50);
 	$rfws -> getRowDimension('6') -> setRowHeight(27.75);
-
-
 
 	$rf1_companies = db::select(
 			   		 db::raw("
@@ -809,7 +845,6 @@ public function getPhform($id) {
 
 	$rcom_iterator = $rcom_iterator + 1;
 	}
-
 
 	$rf1_employees = db::select(
 			   		 db::raw("
@@ -858,7 +893,7 @@ public function getPhform($id) {
 									e.gender
 			   			")
 					);
-$styles = new Styles;
+
 
 	$remp_iterator = 11;
 	$remp_count = count($rf1_employees);
@@ -921,7 +956,6 @@ $styles = new Styles;
 	$remp_iterator = $remp_iterator + 1;
 	}
 
-	$style = new Styles;
 
 	$footers = db::select(
 			   db::raw("
@@ -1050,23 +1084,23 @@ $styles = new Styles;
 		$box15 -> setWorkSheet($rfws);
 		$box16 -> setWorkSheet($rfws);
 
-		$rfws -> getStyle('A11'.':'.'AA'.($footer5)) -> applyFromArray($styles -> getFooter());
-		$rfws -> getStyle('A11'.':'.'AA'.($footer5)) -> applyFromArray($styles -> getInsThin());
-		$rfws -> getStyle('A11'.':'.'A'.($footer0)) -> applyFromArray($styles -> rightAlign());
-		$rfws -> getStyle('U11'.':'.'V'.($footer0)) -> applyFromArray($styles -> getVertHoriCenter());
-		$rfws -> getStyle('A'.($footer1).':'.'W'.($footer5)) -> applyFromArray($styles -> getVertHoriCenter());
-		$rfws -> getStyle('A'.($footer1).':'.'W'.($footer5)) -> applyFromArray($styles -> getVertHoriCenter());
-		$rfws -> getStyle('A'.($footer1).':'.'G'.($footer3)) -> applyFromArray($styles -> getWhite());
+		$rfws -> getStyle('A11'.':'.'AA'.($footer5)) -> applyFromArray($footer);
+		$rfws -> getStyle('A11'.':'.'AA'.($footer5)) -> applyFromArray($insthin);
+		$rfws -> getStyle('A11'.':'.'A'.($footer0)) -> applyFromArray($rightAlign);
+		$rfws -> getStyle('U11'.':'.'V'.($footer0)) -> applyFromArray($vhcenter);
+		$rfws -> getStyle('A'.($footer1).':'.'W'.($footer5)) -> applyFromArray($vhcenter);
+		$rfws -> getStyle('A'.($footer1).':'.'W'.($footer5)) -> applyFromArray($vhcenter);
+		$rfws -> getStyle('A'.($footer1).':'.'G'.($footer3)) -> applyFromArray($white);
 
 		$rfws -> getStyle('A'.($footer0).':'.'X'.($footer3)) -> getFont() -> setSize(12);
-		$rfws -> getStyle('A'.($footer3)) -> applyFromArray ($styles -> ft8wraptrue());
-		$rfws -> getStyle('H'.($footer2).':'.'T'.($footer2)) -> applyFromArray ($styles -> ft8wraptrue());	
-		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> applyFromArray ($styles -> ft8wraptrue());
+		$rfws -> getStyle('A'.($footer3)) -> applyFromArray($ft8wraptrue);
+		$rfws -> getStyle('H'.($footer2).':'.'T'.($footer2)) -> applyFromArray($ft8wraptrue);	
+		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> applyFromArray($ft8wraptrue);
 
-		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> applyFromArray ($styles -> ft8wraptrue());
+		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> applyFromArray ($ft8wraptrue);
 		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> getAlignment() -> setVertical(PHPEXCEL_STYLE_ALIGNMENT::VERTICAL_BOTTOM);
 		$rfws -> getStyle('Z'.($footer1).':'.'Z'.($footer3)) -> getAlignment() -> setHorizontal(PHPEXCEL_STYLE_ALIGNMENT::HORIZONTAL_CENTER);	
-		$rfws -> getStyle('A'.($footer5).':'.'W'.($footer5)) -> applyFromArray ($styles -> ft8wraptrue());
+		$rfws -> getStyle('A'.($footer5).':'.'W'.($footer5)) -> applyFromArray ($ft8wraptrue);
 		$rfws -> getStyle('A'.($footer5).':'.'W'.($footer5)) -> getAlignment() -> setVertical(PHPEXCEL_STYLE_ALIGNMENT::VERTICAL_BOTTOM);
 		$rfws -> getStyle('A'.($footer1).':'.'W'.($footer3)) -> getAlignment() -> setHorizontal(PHPEXCEL_STYLE_ALIGNMENT::HORIZONTAL_CENTER);
 
@@ -1076,7 +1110,7 @@ $styles = new Styles;
 		$rfws -> getStyle('U'.$footer3) -> getFont() -> setSize(8);
 
 		$rfws -> getStyle('H'.($footer2).':'.'T'.($footer2)) -> getFont() -> setSize(10);
-		$rfws -> getStyle('X'.($footer1).':'.'Y'.($footer3)) -> applyFromArray ($style -> getVertHoriCenter());
+		$rfws -> getStyle('X'.($footer1).':'.'Y'.($footer3)) -> applyFromArray ($vhcenter);
 		$rfws -> getStyle('A'.$footer4) -> getFont() -> setSize(16);
 		$rfws -> getStyle('A'.$footer4) -> getFont() -> setBold(true);
 		$rfws -> getStyle('A'.$footer2) -> getFont() -> setSize(28);
